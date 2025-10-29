@@ -74,3 +74,6 @@ def register_view(request):
 def logout_view(request):
     logout(request)
     return redirect('root')
+
+def profile_view(request):
+    return render(request, 'frontend/profile.html')

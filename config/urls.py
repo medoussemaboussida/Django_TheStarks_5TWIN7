@@ -25,6 +25,7 @@ urlpatterns = [
     path('', views.root, name='root'),
     path('login/', views.login_view, name='login'),
     path('home/', views.frontend_home, name='frontend_home'),
+    path('profile/', views.profile_view, name='profile'),
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('admin-template/', views.admin_dashboard, name='admin_dashboard'),

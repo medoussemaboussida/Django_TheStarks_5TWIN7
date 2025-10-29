@@ -88,6 +88,7 @@
                     <a href="#0"> <i class="lni lni-cart"></i> </a>
                     <a href="#0"> <i class="lni lni-alarm"></i> </a>
                     {% if request.user.is_authenticated %}
+                    <a href="{% url 'profile' %}" title="Mon profil"> <i class="lni lni-user"></i> </a>
                     <a href="{% url 'logout' %}" title="Logout"> <i class="lni lni-exit"></i> </a>
                     {% endif %}
                   </div>

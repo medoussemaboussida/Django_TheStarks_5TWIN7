@@ -324,6 +324,15 @@
                             </div>
                         </li>
 
+                        <!-- Nav Item - Logout Icon -->
+                        {% if request.user.is_authenticated %}
+                        <li class="nav-item no-arrow mx-1">
+                            <a class="nav-link" href="{% url 'logout' %}" title="Logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
                         <div class="topbar-divider d-none d-sm-block"></div>
 
                         <!-- Nav Item - User Information -->

@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon Profil</title>
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}">
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}">
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}">
+</head>
+<body>
+  <nav class="navbar navbar-light bg-light px-3">
+    <a class="navbar-brand" href="/">Accueil</a>
+    <div class="d-flex">
+      <a class="btn btn-outline-secondary me-2" href="/">
+        <i class="lni lni-home"></i>
+      </a>
+      <a class="btn btn-outline-danger" href="{% url 'logout' %}">
+        <i class="lni lni-exit"></i>
+      </a>
+    </div>
+  </nav>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-4">
+              <img src="{% static 'admin/img/undraw_profile.svg' %}" alt="avatar" class="rounded-circle me-3" width="64" height="64">
+              <div>
+                <h4 class="mb-0">{{ request.user.get_full_name|default:request.user.username }}</h4>
+                <small class="text-muted">Inscrit: {{ request.user.date_joined|date:'Y-m-d H:i' }}</small>
+              </div>
+            </div>
+
+            <h5 class="mb-3">Informations personnelles</h5>
+            <ul class="list-group mb-4">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="lni lni-user me-2"></i>Nom d'utilisateur</span>
+                <strong>{{ request.user.username }}</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="lni lni-envelope me-2"></i>Email</span>
+                <strong>{{ request.user.email }}</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="lni lni-protection me-2"></i>Rôle</span>
+                <strong>{% if request.user.is_superuser %}Administrateur{% elif request.user.is_staff %}Staff{% else %}Utilisateur{% endif %}</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="lni lni-timer me-2"></i>Dernière connexion</span>
+                <strong>{{ request.user.last_login|date:'Y-m-d H:i'|default:'—' }}</strong>
+              </li>
+            </ul>
+
+            <div class="d-flex gap-2">
+              <a class="btn btn-primary" href="/password-reset/">Changer le mot de passe</a>
+              <a class="btn btn-outline-danger" href="{% url 'logout' %}">Se déconnecter</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
+</body>
+</html>
