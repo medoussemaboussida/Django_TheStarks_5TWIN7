@@ -173,6 +173,63 @@ def admin_dashboard(request):
             messages.success(request, 'Utilisateur supprimé.')
             return redirect('admin_dashboard')
 
+        elif action == 'report':
+            # Generate a PDF report of monthly signups
+            try:
+                from reportlab.lib.pagesizes import A4
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.units import mm
+                from io import BytesIO
+
+                buffer = BytesIO()
+                pdf = canvas.Canvas(buffer, pagesize=A4)
+                width, height = A4
+
+                title = "Rapport: Inscriptions par mois (12 derniers mois)"
+                pdf.setFont("Helvetica-Bold", 14)
+                pdf.drawString(20*mm, height - 20*mm, title)
+
+                pdf.setFont("Helvetica", 10)
+                y = height - 30*mm
+                pdf.drawString(20*mm, y, f"Généré le: {timezone.now().strftime('%Y-%m-%d %H:%M')}")
+                y -= 12
+
+                # Table header
+                pdf.setFont("Helvetica-Bold", 11)
+                pdf.drawString(20*mm, y, "Mois")
+                pdf.drawString(100*mm, y, "Inscriptions")
+                y -= 8
+                pdf.line(20*mm, y, 190*mm, y)
+                y -= 6
+                pdf.setFont("Helvetica", 10)
+
+                for label, count in zip(json.loads(chart_ctx['chart_month_labels']), json.loads(chart_ctx['chart_month_counts'])):
+                    if y < 20*mm:
+                        pdf.showPage()
+                        y = height - 20*mm
+                        pdf.setFont("Helvetica-Bold", 11)
+                        pdf.drawString(20*mm, y, "Mois")
+                        pdf.drawString(100*mm, y, "Inscriptions")
+                        y -= 8
+                        pdf.line(20*mm, y, 190*mm, y)
+                        y -= 6
+                        pdf.setFont("Helvetica", 10)
+                    pdf.drawString(20*mm, y, str(label))
+                    pdf.drawString(100*mm, y, str(count))
+                    y -= 12
+
+                pdf.showPage()
+                pdf.save()
+                buffer.seek(0)
+
+                from django.http import HttpResponse
+                response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+                response['Content-Disposition'] = 'attachment; filename="rapport_inscriptions_mensuelles.pdf"'
+                return response
+            except Exception:
+                messages.error(request, "La génération du PDF nécessite la bibliothèque 'reportlab'. Exécutez: pip install reportlab")
+                return redirect('admin_dashboard')
+
     ctx = {
         'users': users,
     }
