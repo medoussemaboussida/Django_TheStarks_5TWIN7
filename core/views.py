@@ -3,6 +3,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
 from .forms import SignupForm, EmailAuthForm
 from django.conf import settings
 import json
@@ -76,4 +77,42 @@ def logout_view(request):
     return redirect('root')
 
 def profile_view(request):
-    return render(request, 'frontend/profile.html')
+    if not request.user.is_authenticated:
+        return redirect('login')
+    profile = getattr(request.user, 'profile', None)
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        username = request.POST.get('username', '').strip()
+        birth_date = request.POST.get('birth_date', '').strip()
+
+        if username and username != request.user.username:
+            if User.objects.filter(username__iexact=username).exclude(pk=request.user.pk).exists():
+                messages.error(request, "Ce nom d’utilisateur est déjà pris.")
+                return render(request, 'frontend/profile.html', {'profile': profile})
+            request.user.username = username
+
+        if full_name:
+            parts = full_name.split()
+            request.user.first_name = parts[0] if parts else ''
+            request.user.last_name = ' '.join(parts[1:]) if len(parts) > 1 else ''
+
+        if birth_date:
+            try:
+                from datetime import datetime
+                d = datetime.strptime(birth_date, '%Y-%m-%d').date()
+                if profile is None:
+                    from .models import Profile
+                    profile = Profile.objects.create(user=request.user, birth_date=d)
+                else:
+                    profile.birth_date = d
+            except Exception:
+                messages.error(request, "Date de naissance invalide.")
+                return render(request, 'frontend/profile.html', {'profile': profile})
+
+        request.user.save()
+        if profile is not None:
+            profile.save()
+        messages.success(request, 'Profil mis à jour avec succès.')
+        return redirect('profile')
+
+    return render(request, 'frontend/profile.html', {'profile': profile})

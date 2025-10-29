@@ -1,70 +1,156 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mon Profil</title>
-  <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}">
-  <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}">
-  <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}">
-</head>
-<body>
-  <nav class="navbar navbar-light bg-light px-3">
-    <a class="navbar-brand" href="/">Accueil</a>
-    <div class="d-flex">
-      <a class="btn btn-outline-secondary me-2" href="/">
-        <i class="lni lni-home"></i>
-      </a>
-      <a class="btn btn-outline-danger" href="{% url 'logout' %}">
-        <i class="lni lni-exit"></i>
-      </a>
-    </div>
-  </nav>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Mon Profil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <div class="d-flex align-items-center mb-4">
-              <img src="{% static 'admin/img/undraw_profile.svg' %}" alt="avatar" class="rounded-circle me-3" width="64" height="64">
-              <div>
-                <h4 class="mb-0">{{ request.user.get_full_name|default:request.user.username }}</h4>
-                <small class="text-muted">Inscrit: {{ request.user.date_joined|date:'Y-m-d H:i' }}</small>
+    <!-- Styles identiques à la home -->
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/tiny-slider.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/animate.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/profile.css' %}"/>
+  </head>
+  <body class="profile-page">
+
+    <!-- Header/nav identique -->
+    <section class="hero-section-wrapper-5 profile-hero">
+      <header class="header header-6">
+        <div class="navbar-area">
+          <div class="container">
+            <div class="row align-items-center">
+              <div class="col-lg-12">
+                <nav class="navbar navbar-expand-lg">
+                  <a class="navbar-brand" href="/">
+                    <img src="{% static 'frontend/assets/img/logo/logo.svg' %}" alt="Logo" />
+                  </a>
+                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent6" aria-controls="navbarSupportedContent6" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                  </button>
+
+                  <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent6">
+                    <ul id="nav6" class="navbar-nav ms-auto">
+                      <li class="nav-item">
+                        <a class="page-scroll" href="/">Home</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="page-scroll" href="/profile/">Profil</a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="header-action d-flex">
+                    {% if request.user.is_authenticated %}
+                      <a href="{% url 'profile' %}" title="Mon profil"> <i class="lni lni-user"></i> </a>
+                      <a href="{% url 'logout' %}" title="Logout"> <i class="lni lni-exit"></i> </a>
+                    {% else %}
+                      <a href="{% url 'login' %}">Se connecter</a>
+                    {% endif %}
+                  </div>
+                </nav>
               </div>
             </div>
+          </div>
+        </div>
+      </header>
 
-            <h5 class="mb-3">Informations personnelles</h5>
-            <ul class="list-group mb-4">
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><i class="lni lni-user me-2"></i>Nom d'utilisateur</span>
-                <strong>{{ request.user.username }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><i class="lni lni-envelope me-2"></i>Email</span>
-                <strong>{{ request.user.email }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><i class="lni lni-protection me-2"></i>Rôle</span>
-                <strong>{% if request.user.is_superuser %}Administrateur{% elif request.user.is_staff %}Staff{% else %}Utilisateur{% endif %}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><i class="lni lni-timer me-2"></i>Dernière connexion</span>
-                <strong>{{ request.user.last_login|date:'Y-m-d H:i'|default:'—' }}</strong>
-              </li>
-            </ul>
-
-            <div class="d-flex gap-2">
-              <a class="btn btn-primary" href="/password-reset/">Changer le mot de passe</a>
-              <a class="btn btn-outline-danger" href="{% url 'logout' %}">Se déconnecter</a>
+      <!-- Bandeau titre -->
+      <div class="hero-section hero-style-5 img-bg profile-hero-bg">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <div class="hero-content-wrapper">
+                <h2 class="mb-10 wow fadeInUp" data-wow-delay=".2s">Mon Profil</h2>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
-</body>
+    <!-- Corps de page profil -->
+    <section class="profile-section pt-60 pb-80">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-xl-8 col-lg-9">
+            <div class="profile-card shadow-sm wow fadeInUp" data-wow-delay=".2s">
+              <div class="profile-header d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                  <img src="{% static 'admin/img/undraw_profile.svg' %}" alt="avatar" class="avatar rounded-circle">
+                  <div class="info ms-3">
+                    <div class="d-flex align-items-center gap-10">
+                      <h3 class="name mb-0" id="display_full_name">{{ request.user.get_full_name|default:request.user.username }}</h3>
+                      <input type="text" class="form-control d-none" id="input_full_name" name="full_name" value="{{ request.user.get_full_name|default:'' }}" placeholder="Nom complet">
+                    </div>
+                    <div class="chips mt-5">
+                      <span class="chip"><i class="lni lni-calendar"></i> Inscrit le {{ request.user.date_joined|date:'Y-m-d H:i' }}</span>
+                      <span class="chip"><i class="lni lni-timer"></i> Dernière connexion {{ request.user.last_login|date:'Y-m-d H:i'|default:'—' }}</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- header actions removed; buttons moved near Change Password -->
+              </div>
+
+              <form method="post" id="profile_form">
+                {% csrf_token %}
+                <h5 class="section-title mt-25">Mes informations</h5>
+                <div class="info-grid mt-15">
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-user"></i></div>
+                    <div class="content">
+                      <div class="label">Nom d'utilisateur</div>
+                    <div class="value" id="display_username">{{ request.user.username }}</div>
+                    <input type="text" class="form-control d-none" id="input_username" name="username" value="{{ request.user.username }}" placeholder="Nom d'utilisateur">
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-envelope"></i></div>
+                    <div class="content">
+                      <div class="label">Email</div>
+                      <div class="value">{{ request.user.email }}</div>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-calendar"></i></div>
+                    <div class="content">
+                      <div class="label">Date de naissance</div>
+                    <div class="value" id="display_birth">{{ profile.birth_date|date:'Y-m-d'|default:'—' }}</div>
+                    <input type="date" class="form-control d-none" id="input_birth" name="birth_date" value="{{ profile.birth_date|date:'Y-m-d' }}">
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-shield"></i></div>
+                    <div class="content">
+                      <div class="label">Rôle</div>
+                      <div class="value">{% if request.user.is_superuser %}Administrateur{% elif request.user.is_staff %}Staff{% else %}Utilisateur{% endif %}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="actions mt-25 d-flex gap-2">
+                  <a class="button radius-30" href="/password-reset/"><i class="lni lni-lock"></i> Changer le mot de passe</a>
+                  <button type="button" class="button radius-30" id="btn_edit"><i class="lni lni-pencil"></i> Modifier</button>
+                  <button type="submit" class="button radius-30 d-none" id="btn_save"><i class="lni lni-checkmark"></i> Enregistrer</button>
+                  <a class="button radius-30 outline" href="{% url 'logout' %}"><i class="lni lni-exit"></i> Se déconnecter</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <a href="#" class="scroll-top"> <i class="lni lni-chevron-up"></i> </a>
+
+    <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/wow.min.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/main.js' %}"></script>
+  </body>
 </html>
