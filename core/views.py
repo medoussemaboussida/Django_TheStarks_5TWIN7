@@ -15,7 +15,15 @@ import urllib.parse
 import urllib.request
 
 def admin_dashboard(request):
-    return render(request, 'admin/index.html')
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_staff:
+        messages.error(request, "Accès refusé.")
+        return redirect('root')
+    users = User.objects.all().order_by('-date_joined')
+    return render(request, 'admin/index.html', {
+        'users': users,
+    })
 
 def frontend_home(request):
     return render(request, 'frontend/index.html')

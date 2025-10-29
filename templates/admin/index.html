@@ -127,11 +127,11 @@
                     <span>Charts</span></a>
             </li>
 
-            <!-- Nav Item - Tables -->
+            <!-- Nav Item - Users Management -->
             <li class="nav-item">
-                <a class="nav-link" href="tables.html">
-                    <i class="fas fa-fw fa-table"></i>
-                    <span>Tables</span></a>
+                <a class="nav-link" href="#users">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Utilisateurs</span></a>
             </li>
 
             <!-- Divider -->
@@ -379,6 +379,58 @@
                         <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
                         <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
                                 class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+                    </div>
+
+                    <!-- Users Management -->
+                    <div class="row" id="users">
+                      <div class="col-12">
+                        <div class="card shadow mb-4">
+                          <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Utilisateurs inscrits</h6>
+                            <span class="text-muted small">Total: {{ users|length }}</span>
+                          </div>
+                          <div class="card-body">
+                            <div class="table-responsive">
+                              <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                  <tr>
+                                    <th>#</th>
+                                    <th>Nom d’utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Inscription</th>
+                                    <th>Dernière connexion</th>
+                                    <th>Rôle</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {% for u in users %}
+                                  <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ u.username }}</td>
+                                    <td>{{ u.email|default:'—' }}</td>
+                                    <td>{{ u.date_joined|date:'Y-m-d H:i' }}</td>
+                                    <td>{{ u.last_login|date:'Y-m-d H:i'|default:'—' }}</td>
+                                    <td>
+                                      {% if u.is_superuser %}
+                                        <span class="badge badge-danger">Admin</span>
+                                      {% elif u.is_staff %}
+                                        <span class="badge badge-info">Staff</span>
+                                      {% else %}
+                                        <span class="badge badge-secondary">Utilisateur</span>
+                                      {% endif %}
+                                    </td>
+                                  </tr>
+                                  {% empty %}
+                                  <tr>
+                                    <td colspan="6" class="text-center text-muted">Aucun utilisateur.</td>
+                                  </tr>
+                                  {% endfor %}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Content Row -->
