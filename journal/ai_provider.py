@@ -12,7 +12,11 @@ except Exception:
     settings = None
 
 # Google Gemini
-GEMINI_API_KEY = "AIzaSyC4UvQMFbqvLLmYQhq5dqXnn7RgVfhmOM4"
+# Clé chargée depuis l'environnement ou les settings Django (pas de clé en dur)
+GEMINI_API_KEY = (
+    os.getenv("GEMINI_API_KEY")
+    or (getattr(settings, "GEMINI_API_KEY", "") if settings else "")
+)
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-pro-latest")
 GEMINI_API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/"
 

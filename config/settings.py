@@ -141,3 +141,4 @@ RECAPTCHA_SECRET_KEY = '6LeUJvsrAAAAAJoxEn8b99KQ22tgv949nkW-PB1g'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+GEMINI_API_KEY = "AIzaSyC4UvQMFbqvLLmYQhq5dqXnn7RgVfhmOM4"
