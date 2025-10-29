@@ -42,39 +42,48 @@
           {% endfor %}
         {% endif %}
 
-        <form method="post" class="user">
+        <form method="post" class="user" novalidate>
           {% csrf_token %}
           {% if form.non_field_errors %}
             <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
           {% endif %}
 
           <div class="form-grid">
-            <div class="full">
+            <div class="full input-with-icon">
               {{ form.username }}
+              <i class="far fa-user field-icon"></i>
               {% if form.username.errors %}
                 <div class="text-danger small">{{ form.username.errors|striptags }}</div>
               {% endif %}
             </div>
-            <div class="full">
+            <div class="full input-with-icon">
               {{ form.email }}
+              <i class="far fa-envelope field-icon"></i>
               {% if form.email.errors %}
                 <div class="text-danger small">{{ form.email.errors|striptags }}</div>
               {% endif %}
             </div>
-            <div>
+            <div class="input-with-icon">
               {{ form.password1 }}
+              <i class="fas fa-lock field-icon"></i>
               {% if form.password1.errors %}
                 <div class="text-danger small">{{ form.password1.errors|striptags }}</div>
               {% endif %}
+              <div class="strength-meter">
+                <div class="strength-meter-bar"><span id="pw-meter-fill"></span></div>
+                <div class="strength-label" id="pw-meter-label">Enter a password</div>
+              </div>
             </div>
-            <div>
+            <div class="input-with-icon">
               {{ form.password2 }}
+              <i class="fas fa-key field-icon"></i>
               {% if form.password2.errors %}
                 <div class="text-danger small">{{ form.password2.errors|striptags }}</div>
               {% endif %}
             </div>
-            <div class="full">
+            <div class="full input-with-icon">
               {{ form.birth_date }}
+              <i class="far fa-calendar field-icon"></i>
               {% if form.birth_date.errors %}
                 <div class="text-danger small">{{ form.birth_date.errors|striptags }}</div>
               {% endif %}
@@ -87,7 +96,7 @@
 
         <div class="hr-text">Already registered?</div>
         <div class="small-links">
-          <div class="small"><a href="{% url 'root' %}">Back to login</a></div>
+          <div class="small"><a href="{% url 'login' %}">Back to login</a></div>
           <div class="small"><a href="#">Need help?</a></div>
         </div>
       </div>
@@ -98,6 +107,43 @@
     <script src="{% static 'admin/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'admin/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
     <script src="{% static 'admin/js/sb-admin-2.min.js' %}"></script>
+    <script>
+      (function() {
+        const input = document.getElementById('id_password1');
+        const fill = document.getElementById('pw-meter-fill');
+        const label = document.getElementById('pw-meter-label');
+        if (!input || !fill || !label) return;
+
+        function scorePassword(pw) {
+          let score = 0;
+          if (!pw) return 0;
+          const length = pw.length;
+          const hasLower = /[a-z]/.test(pw);
+          const hasUpper = /[A-Z]/.test(pw);
+          const hasNumber = /\d/.test(pw);
+          const hasSymbol = /[^A-Za-z0-9]/.test(pw);
+          const variety = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+          score += Math.min(10, length) * 6; // up to 60
+          score += variety * 10; // up to 40
+          return Math.min(100, score);
+        }
+
+        function updateMeter() {
+          const val = input.value || '';
+          const s = scorePassword(val);
+          let cls = 'strength-weak';
+          let text = 'Weak';
+          if (s >= 70) { cls = 'strength-strong'; text = 'Strong'; }
+          else if (s >= 40) { cls = 'strength-medium'; text = 'Medium'; }
+          fill.className = cls;
+          fill.style.width = s + '%';
+          label.textContent = val ? `Password strength: ${text}` : 'Enter a password';
+        }
+
+        input.addEventListener('input', updateMeter);
+        updateMeter();
+      })();
+    </script>
 
 </body>
 

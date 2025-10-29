@@ -121,6 +121,13 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# reCAPTCHA configuration
+# For local development, set your keys directly here (DO NOT commit real prod keys)
+# In production, prefer: RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '')
+#                      and RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_SITE_KEY = '6LeUJvsrAAAAAGJ2iNxMgzSLd05NpVn0sHwqsqzO'
+RECAPTCHA_SECRET_KEY = '6LeUJvsrAAAAAJoxEn8b99KQ22tgv949nkW-PB1g'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

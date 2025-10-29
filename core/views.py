@@ -3,7 +3,11 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import SignupForm, AuthForm
+from .forms import SignupForm, EmailAuthForm
+from django.conf import settings
+import json
+import urllib.parse
+import urllib.request
 
 def admin_dashboard(request):
     return render(request, 'admin/index.html')
@@ -20,7 +24,30 @@ def root(request):
 
 def login_view(request):
     if request.method == 'POST':
-        form = AuthForm(request, data=request.POST)
+        form = EmailAuthForm(request.POST)
+        # reCAPTCHA verification if keys are configured
+        site_key = getattr(settings, 'RECAPTCHA_SITE_KEY', '')
+        secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', '')
+        if site_key and secret_key:
+            recaptcha_response = request.POST.get('g-recaptcha-response', '')
+            if not recaptcha_response:
+                messages.error(request, 'Veuillez valider le reCAPTCHA.')
+                return render(request, 'admin/login.html', {'form': form, 'recaptcha_site_key': site_key})
+            data = urllib.parse.urlencode({
+                'secret': secret_key,
+                'response': recaptcha_response,
+                'remoteip': request.META.get('REMOTE_ADDR', ''),
+            }).encode()
+            req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
+            try:
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    result = json.loads(resp.read().decode())
+                if not result.get('success'):
+                    messages.error(request, 'La vérification reCAPTCHA a échoué. Réessayez.')
+                    return render(request, 'admin/login.html', {'form': form, 'recaptcha_site_key': site_key})
+            except Exception:
+                messages.error(request, "Impossible de vérifier le reCAPTCHA pour le moment.")
+                return render(request, 'admin/login.html', {'form': form, 'recaptcha_site_key': site_key})
         if form.is_valid():
             user = form.get_user()
             login(request, user)
@@ -30,8 +57,8 @@ def login_view(request):
         else:
             messages.error(request, 'Identifiants invalides')
     else:
-        form = AuthForm(request)
-    return render(request, 'admin/login.html', {'form': form})
+        form = EmailAuthForm()
+    return render(request, 'admin/login.html', {'form': form, 'recaptcha_site_key': getattr(settings, 'RECAPTCHA_SITE_KEY', '')})
 
 def register_view(request):
     if request.method == 'POST':

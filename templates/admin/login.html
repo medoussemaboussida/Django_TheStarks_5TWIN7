@@ -46,25 +46,33 @@
           {% endfor %}
         {% endif %}
 
-        <form method="post" class="user">
+        <form method="post" class="user" novalidate>
           {% csrf_token %}
           {% if form.non_field_errors %}
             <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
           {% endif %}
 
           <div class="form-grid">
-            <div class="full">
-              {{ form.username }}
-              {% if form.username.errors %}
-                <div class="text-danger small">{{ form.username.errors|striptags }}</div>
+            <div class="full input-with-icon">
+              {{ form.email }}
+              <i class="far fa-envelope field-icon"></i>
+              {% if form.email.errors %}
+                <div class="text-danger small">{{ form.email.errors|striptags }}</div>
               {% endif %}
             </div>
-            <div class="full">
+            <div class="full input-with-icon">
               {{ form.password }}
+              <i class="fas fa-lock field-icon"></i>
               {% if form.password.errors %}
                 <div class="text-danger small">{{ form.password.errors|striptags }}</div>
               {% endif %}
             </div>
+            {% if recaptcha_site_key %}
+            <div class="full">
+              <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+              <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+            </div>
+            {% endif %}
             <div class="full">
               <button type="submit" class="btn btn-primary btn-user btn-block">Sign in</button>
             </div>
