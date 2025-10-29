@@ -10,6 +10,10 @@ from .forms import SignupForm, EmailAuthForm
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.db.models.functions import TruncMonth
+from django.db.models import Count
+from django.utils import timezone
+import json
 import json
 import urllib.parse
 import urllib.request
@@ -21,6 +25,30 @@ def admin_dashboard(request):
         messages.error(request, "Accès refusé.")
         return redirect('root')
     users = User.objects.all().order_by('-date_joined')
+    now = timezone.now().date().replace(day=1)
+    ym = []
+    y, m = now.year, now.month
+    for _ in range(12):
+        ym.append((y, m))
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    ym.reverse()
+    monthly_qs = User.objects.annotate(mm=TruncMonth('date_joined')).values('mm').annotate(c=Count('id'))
+    monthly_map = {item['mm'].date(): item['c'] for item in monthly_qs if item['mm']}
+    month_labels = [f"{yy}-{mm:02d}" for (yy, mm) in ym]
+    from datetime import date as _date
+    month_counts = [monthly_map.get(_date(yy, mm, 1), 0) for (yy, mm) in ym]
+    total_users = users.count()
+    admin_count = User.objects.filter(is_superuser=True).count()
+    utilisateur_count = max(total_users - admin_count, 0)
+    chart_ctx = {
+        'chart_month_labels': json.dumps(month_labels),
+        'chart_month_counts': json.dumps(month_counts),
+        'chart_roles_labels': json.dumps(['Admin', 'Utilisateur']),
+        'chart_roles_counts': json.dumps([admin_count, utilisateur_count]),
+    }
 
     if request.method == 'POST':
         action = request.POST.get('action', 'add')
@@ -47,7 +75,7 @@ def admin_dashboard(request):
                     au_errors['au_password'] = ' '.join(ve.messages)
 
             if au_errors:
-                return render(request, 'admin/index.html', {
+                ctx = {
                     'users': users,
                     'au_errors': au_errors,
                     'open_add_user': True,
@@ -57,7 +85,9 @@ def admin_dashboard(request):
                         'au_is_staff': is_staff,
                         'au_is_superuser': is_superuser,
                     }
-                })
+                }
+                ctx.update(chart_ctx)
+                return render(request, 'admin/index.html', ctx)
 
             user = User.objects.create_user(username=username, email=email, password=password)
             user.is_staff = is_staff
@@ -98,7 +128,7 @@ def admin_dashboard(request):
                 return redirect('admin_dashboard')
 
             if eu_errors:
-                return render(request, 'admin/index.html', {
+                ctx = {
                     'users': users,
                     'eu_errors': eu_errors,
                     'open_edit_user': True,
@@ -109,7 +139,9 @@ def admin_dashboard(request):
                         'eu_is_staff': is_staff if 'eu_is_staff' in request.POST else target.is_staff,
                         'eu_is_superuser': is_superuser if 'eu_is_superuser' in request.POST else target.is_superuser,
                     }
-                })
+                }
+                ctx.update(chart_ctx)
+                return render(request, 'admin/index.html', ctx)
 
             target.username = username
             target.email = email
@@ -141,9 +173,11 @@ def admin_dashboard(request):
             messages.success(request, 'Utilisateur supprimé.')
             return redirect('admin_dashboard')
 
-    return render(request, 'admin/index.html', {
+    ctx = {
         'users': users,
-    })
+    }
+    ctx.update(chart_ctx)
+    return render(request, 'admin/index.html', ctx)
 
 def frontend_home(request):
     return render(request, 'frontend/index.html')
