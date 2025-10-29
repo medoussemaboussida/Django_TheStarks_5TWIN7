@@ -80,7 +80,13 @@
             <div class="profile-card shadow-sm wow fadeInUp" data-wow-delay=".2s">
               <div class="profile-header d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center">
-                  <img src="{% static 'admin/img/undraw_profile.svg' %}" alt="avatar" class="avatar rounded-circle">
+                  <div class="avatar-wrap">
+                    <img src="{% if profile and profile.photo %}{{ profile.photo.url }}{% else %}{% static 'admin/img/undraw_profile.svg' %}{% endif %}" alt="avatar" class="avatar rounded-circle" id="avatar_img">
+                    <input type="file" class="d-none" id="input_photo" name="photo" accept="image/*" form="profile_form">
+                    <button type="button" class="avatar-edit-btn" id="btn_change_photo" title="Changer la photo" aria-label="Changer la photo">
+                      <i class="lni lni-camera"></i>
+                    </button>
+                  </div>
                   <div class="info ms-3">
                     <div class="d-flex align-items-center gap-10">
                       <h3 class="name mb-0" id="display_full_name">{{ request.user.get_full_name|default:request.user.username }}</h3>
@@ -89,12 +95,17 @@
                       <span class="chip"><i class="lni lni-calendar"></i> Inscrit le {{ request.user.date_joined|date:'Y-m-d H:i' }}</span>
                       <span class="chip"><i class="lni lni-timer"></i> Dernière connexion {{ request.user.last_login|date:'Y-m-d H:i'|default:'—' }}</span>
                     </div>
+                    {% if errors.photo %}
+                      <div class="text-danger small mt-2" id="photo_error">{{ errors.photo }}</div>
+                    {% else %}
+                      <div class="text-danger small mt-2 d-none" id="photo_error"></div>
+                    {% endif %}
                   </div>
                 </div>
                 <!-- header actions removed; buttons moved near Change Password -->
               </div>
 
-              <form method="post" id="profile_form">
+              <form method="post" id="profile_form" enctype="multipart/form-data">
                 {% csrf_token %}
                 <h5 class="section-title mt-25">Mes informations</h5>
                 <div class="info-grid mt-15">
@@ -302,6 +313,37 @@
             if(!(okU && okB)){
               e.preventDefault();
             }
+          });
+        }
+
+        // Photo upload: open picker, validate, preview
+        const btnChangePhoto = document.getElementById('btn_change_photo');
+        const inputPhoto = document.getElementById('input_photo');
+        const avatarImg = document.getElementById('avatar_img');
+        const photoError = document.getElementById('photo_error');
+        if(btnChangePhoto && inputPhoto){
+          btnChangePhoto.addEventListener('click', function(){ inputPhoto.click(); });
+          inputPhoto.addEventListener('change', function(){
+            if(!inputPhoto.files || !inputPhoto.files[0]) return;
+            const f = inputPhoto.files[0];
+            const isImage = f.type && f.type.startsWith('image/');
+            const okSize = f.size <= 2 * 1024 * 1024;
+            let msg = '';
+            if(!isImage){ msg = 'Le fichier doit être une image.'; }
+            else if(!okSize){ msg = 'L’image est trop volumineuse (max 2 Mo).'; }
+            if(msg){
+              if(photoError){ photoError.textContent = msg; photoError.classList.remove('d-none'); }
+              inputPhoto.value = '';
+              return;
+            }
+            if(photoError){ photoError.textContent = ''; photoError.classList.add('d-none'); }
+            if(avatarImg){
+              const url = URL.createObjectURL(f);
+              avatarImg.src = url;
+            }
+            // Auto-submit to persist the new avatar
+            const pf = document.getElementById('profile_form');
+            if(pf){ pf.submit(); }
           });
         }
 

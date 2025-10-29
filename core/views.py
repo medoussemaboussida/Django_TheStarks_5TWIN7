@@ -89,6 +89,7 @@ def profile_view(request):
         full_name = request.POST.get('full_name', '').strip()
         username = request.POST.get('username', '').strip()
         birth_date = request.POST.get('birth_date', '').strip()
+        photo = request.FILES.get('photo')
 
         if username and username != request.user.username:
             # pattern: letters, numbers, dot, underscore, dash; length 3..30
@@ -113,6 +114,21 @@ def profile_view(request):
                     profile.birth_date = d
             except Exception:
                 errors['birth_date'] = "Date de naissance invalide (format YYYY-MM-DD)."
+
+        # Photo upload handling
+        if photo is not None:
+            # Ensure profile exists before assigning photo
+            if profile is None:
+                from .models import Profile
+                profile = Profile.objects.create(user=request.user)
+            content_type = getattr(photo, 'content_type', '') or ''
+            size = getattr(photo, 'size', 0) or 0
+            if not content_type.startswith('image/'):
+                errors['photo'] = "Le fichier doit être une image (JPEG, PNG, GIF, ...)."
+            elif size > 2 * 1024 * 1024:
+                errors['photo'] = "L’image est trop volumineuse (max 2 Mo)."
+            else:
+                profile.photo = photo
         # if there are any errors, render template with errors and keep inputs visible
         if errors:
             return render(request, 'frontend/profile.html', {'profile': profile, 'errors': errors})
