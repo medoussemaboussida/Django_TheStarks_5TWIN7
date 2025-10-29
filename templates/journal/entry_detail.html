@@ -1,0 +1,221 @@
+{% extends "admin/index.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <!-- Header title + actions -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <a class="btn btn-link p-0" href="{% url 'journal:entry_list' %}">← Retour</a>
+      <h1 class="h3 mb-0">📝 {{ entry.title }}</h1>
+      <small class="text-muted">
+        <i class="far fa-calendar mr-1"></i>{{ entry.entry_date|date:"d/m/Y" }}
+        {% if entry.time_of_day %} · <i class="far fa-clock mr-1"></i>{{ entry.get_time_of_day_display }}{% endif %}
+      </small>
+    </div>
+    <!-- <div class="btn-group">
+      <a class="btn btn-primary btn-sm" href="{% url 'journal:entry_update' entry.pk %}"><i class="fas fa-edit mr-1"></i>Modifier</a>
+      <button type="button" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#confirmDeleteModal"><i class="fas fa-trash mr-1"></i>Supprimer</button>
+    </div> -->
+  </div>
+
+  {% if rec_loading %}
+  <div class="alert alert-info mb-3">
+    Le moteur d'IA se réveille (Hugging Face). Réessaie dans quelques secondes…
+  </div>
+  {% endif %}
+
+  {% if recommendations %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-header d-flex align-items-center"><i class="fas fa-brain mr-2"></i>Recommandations (basées sur cette entrée)</div>
+    <div class="card-body">
+      <ul class="list-unstyled mb-0">
+        {% for r in recommendations %}
+          <li class="mb-2">
+            <div class="d-flex align-items-center justify-content-between">
+              <strong>{{ r.label }}</strong>
+              <div class="small">
+                {% if r.category %}<span class="badge badge-light border mr-1">{{ r.category }}</span>{% endif %}
+                {% if r.duration_min %}<span class="badge badge-light border">~ {{ r.duration_min }} min</span>{% endif %}
+              </div>
+            </div>
+            {% if r.why %}<div class="text-muted small">{{ r.why }}</div>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% else %}
+  {% if rec_error %}
+  <div class="alert alert-warning mb-3">
+    Impossible de générer des recommandations pour le moment.
+    {% if rec_error %}<div class="small text-muted">Détail: {{ rec_error }}</div>{% endif %}
+    <div class="mt-2"><a href="" class="btn btn-sm btn-outline-primary">Rafraîchir</a></div>
+  </div>
+  {% else %}
+  <div class="alert alert-light border mb-3">Aucune recommandation pour l'instant.</div>
+  {% endif %}
+  {% endif %}
+
+  <div class="row">
+    <!-- Main column -->
+    <div class="col-lg-8">
+      {% if entry.content %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="far fa-file-alt mr-2"></i>Contenu</div>
+        <div class="card-body">
+          <pre class="mb-0" style="white-space:pre-wrap;">{{ entry.content }}</pre>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="far fa-smile mr-2"></i>État émotionnel & physique</div>
+        <div class="card-body">
+          <div class="mb-2">
+            {% if entry.mood %}
+              <span class="badge badge-primary mr-1"><i class="far fa-smile mr-1"></i>{{ entry.get_mood_display }}</span>
+            {% endif %}
+            {% if entry.physical_health %}
+              <span class="badge badge-light border mr-1">💪 {{ entry.get_physical_health_display }}</span>
+            {% endif %}
+          </div>
+
+          <div class="d-flex flex-column" style="gap:.5rem;">
+            {% if entry.main_mood_level %}
+            <div>
+              <span class="mr-2" title="Humeur">🙂</span>
+              {% for _ in "12345" %}<span class="badge {% if forloop.counter <= entry.main_mood_level %}badge-primary{% else %}badge-light{% endif %}">&nbsp;</span>{% endfor %}
+            </div>
+            {% endif %}
+            {% if entry.energy_level %}
+            <div>
+              <span class="mr-2" title="Énergie">⚡</span>
+              {% for _ in "12345" %}<span class="badge {% if forloop.counter <= entry.energy_level %}badge-info{% else %}badge-light{% endif %}">&nbsp;</span>{% endfor %}
+            </div>
+            {% endif %}
+            {% if entry.sleep_quality %}
+            <div>
+              <span class="mr-2" title="Sommeil">😴</span>
+              {% for _ in "12345" %}<span class="badge {% if forloop.counter <= entry.sleep_quality %}badge-success{% else %}badge-light{% endif %}">&nbsp;</span>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="fas fa-star mr-2"></i>Moments marquants</div>
+        <div class="card-body">
+          <ul class="mb-0" style="padding-left:1rem;">
+            {% if entry.favorite_moment %}<li><strong>Moment préféré:</strong> {{ entry.favorite_moment }}</li>{% endif %}
+            {% if entry.challenge %}<li><strong>Défi relevé:</strong> {{ entry.challenge }}</li>{% endif %}
+            {% if entry.achievement %}<li><strong>Réussite:</strong> {{ entry.achievement }}</li>{% endif %}
+            {% if entry.surprise %}<li><strong>Surprise:</strong> {{ entry.surprise }}</li>{% endif %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="fas fa-bullseye mr-2"></i>Objectifs & réflexions</div>
+        <div class="card-body">
+          <ul class="mb-0" style="padding-left:1rem;">
+            {% if entry.daily_goal %}<li><strong>Objectif du jour:</strong> {{ entry.daily_goal }}</li>{% endif %}
+            {% if entry.accomplishments %}<li><strong>Accomplissements:</strong> {{ entry.accomplishments }}</li>{% endif %}
+            {% if entry.lesson_learned %}<li><strong>Leçon apprise:</strong> {{ entry.lesson_learned }}</li>{% endif %}
+            {% if entry.gratitude %}<li><strong>Gratitude:</strong><br><pre class="mb-0" style="white-space:pre-wrap;">{{ entry.gratitude }}</pre></li>{% endif %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="fas fa-running mr-2"></i>Bien‑être & activités</div>
+        <div class="card-body">
+          <div class="small">
+            {% if entry.physical_activity %}<span class="badge badge-success mr-1"><i class="fas fa-running mr-1"></i>{{ entry.get_physical_activity_display }}</span>{% endif %}
+            {% if entry.meditation %}<span class="badge badge-info mr-1"><i class="fas fa-spa mr-1"></i>{{ entry.get_meditation_display }}</span>{% endif %}
+            {% if entry.screen_time %}<span class="badge badge-warning mr-1"><i class="fas fa-mobile-alt mr-1"></i>{{ entry.get_screen_time_display }}</span>{% endif %}
+            {% if entry.meals_quality %}<span class="badge badge-primary mr-1"><i class="fas fa-utensils mr-1"></i>{{ entry.get_meals_quality_display }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="far fa-images mr-2"></i>Médias</div>
+        <div class="card-body">
+          <div class="row">
+            {% for m in entry.media.all %}
+              <div class="col-sm-6 col-md-4 mb-3">
+                <div class="border rounded overflow-hidden" style="background:#f8f9fa;">
+                  <a href="{{ m.file.url }}" target="_blank" class="d-block" title="{{ m.caption|default:m.file.name }}">
+                    <img src="{{ m.file.url }}" alt="{{ m.caption|default:m.file.name }}" class="img-fluid" style="object-fit:cover; width:100%; height:140px;" onerror="this.style.display='none';">
+                  </a>
+                </div>
+                {% if m.caption %}<div class="small text-muted mt-1">{{ m.caption }}</div>{% endif %}
+                {% if m.media_type %}<div class="small">Type: <em>{{ m.media_type }}</em></div>{% endif %}
+              </div>
+            {% empty %}
+              <div class="col-12"><div class="alert alert-light border mb-0">Aucun média</div></div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="fas fa-info-circle mr-2"></i>Contexte</div>
+        <div class="card-body">
+          <div class="mb-2 small">
+            {% if entry.location %}<span class="badge badge-light border mr-1">📍 {{ entry.get_location_display }}</span>{% endif %}
+            {% if entry.weather %}<span class="badge badge-light border mr-1">☁️ {{ entry.get_weather_display }}</span>{% endif %}
+            {% if entry.season %}<span class="badge badge-light border mr-1">🗓️ {{ entry.get_season_display }}</span>{% endif %}
+          </div>
+          {% if entry.main_subject %}
+            <div class="mb-2"><i class="fas fa-compass mr-1 text-secondary"></i><strong>Sujet:</strong> {{ entry.main_subject }}</div>
+          {% endif %}
+          {% if entry.secondary_themes %}
+            <div class="text-muted"><i class="fas fa-tags mr-1"></i>{{ entry.secondary_themes }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex align-items-center"><i class="fas fa-hashtag mr-2"></i>Tags</div>
+        <div class="card-body">
+          {% with tgs=entry.tags.all %}
+            {% if tgs %}
+              <div>
+                {% for t in tgs %}
+                  <span class="badge badge-light" style="border:1px solid #e2e8f0; border-radius:999px; padding:.35rem .6rem; margin:.1rem;">#{{ t.name }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-muted">Aucun tag</div>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirmation modal -->
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body">Es-tu sûr de vouloir supprimer cette entrée ? Cette action est irréversible.</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <form method="post" action="{% url 'journal:entry_delete' entry.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,800 @@
+{% extends "admin/index.html" %}
+{% load static %}
+{% block content %}
+<div class="journal-container py-4">
+    <!-- En-tête amélioré -->
+    <div class="journal-header mb-5">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h1 class="journal-main-title mb-2">📔 Mon Journal</h1>
+                <p class="journal-subtitle text-muted">Vos pensées et souvenirs précieux</p>
+            </div>
+            <a class="btn btn-primary btn-lg journal-create-btn" href="{% url 'journal:entry_create' %}">
+                <i class="fas fa-plus-circle mr-2"></i>Nouvelle entrée
+            </a>
+        </div>
+    </div>
+
+    <!-- Barre de recherche améliorée -->
+    <div class="search-section mb-5">
+        <form method="get" class="journal-search-form">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text journal-search-icon">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input class="form-control journal-search-input" type="text" name="q" value="{{ q }}" 
+                       placeholder="Rechercher dans vos entrées...">
+                {% if q %}
+                <a class="btn btn-outline-secondary journal-clear-search" href="{% url 'journal:entry_list' %}">
+                    <i class="fas fa-times"></i>
+                </a>
+                {% endif %}
+                <button type="submit" class="btn btn-primary journal-search-btn">
+                    <i class="fas fa-search mr-2"></i>Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="journal-stats mb-4">
+        <div class="row g-3">
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon text-primary">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ entries|length }}</div>
+                        <div class="stat-label">Entrées</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon text-success">
+                        <i class="fas fa-smile"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ happy_entries_count }}</div>
+                        <div class="stat-label">Jours heureux</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon text-info">
+                        <i class="fas fa-running"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ active_days_count }}</div>
+                        <div class="stat-label">Jours actifs</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon text-warning">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ entries_with_media }}</div>
+                        <div class="stat-label">Avec médias</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille des entrées améliorée -->
+    <div class="row g-4">
+        {% for e in entries %}
+        <div class="col-xl-4 col-lg-6 col-md-6">
+            <div class="journal-card card border-0 shadow-sm h-100 position-relative">
+                <!-- Image de couverture avec overlay -->
+                {% with m=e.media.all.0 %}
+                <div class="card-image-container">
+                    {% if m %}
+                    <img src="{{ m.file.url }}" class="card-img-top journal-card-img" loading="lazy"
+                         alt="{{ m.caption|default:e.title }}" 
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    {% endif %}
+                    <div class="journal-card-placeholder {% if m and m.file.url %}d-none{% endif %}">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="card-date-overlay">
+                        <span class="date-badge">{{ e.entry_date|date:"d/m" }}</span>
+                    </div>
+                </div>
+                {% endwith %}
+
+                <!-- Contenu de la carte -->
+                <div class="card-body d-flex flex-column p-4">
+                    <!-- En-tête avec métadonnées -->
+                    <div class="journal-card-header mb-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="journal-meta-info">
+                                <span class="journal-time-badge">
+                                    <i class="far fa-clock mr-1"></i>{{ e.get_time_of_day_display }}
+                                </span>
+                                {% if e.location %}
+                                <span class="journal-location-badge">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>{{ e.get_location_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% if e.mood %}
+                            <span class="journal-mood-indicator" data-mood="{{ e.mood }}">
+                                {{ e.get_mood_display }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Titre -->
+                    <h5 class="journal-card-title mb-3">
+                        <a href="{% url 'journal:entry_detail' e.pk %}" aria-label="Voir les détails de {{ e.title }}">{{ e.title }}</a>
+                    </h5>
+                    
+                    <!-- Contenu principal -->
+                    {% if e.content %}
+                    <div class="journal-card-content mb-3">
+                        <p class="journal-content-preview">{{ e.content|truncatechars:150 }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Indicateurs visuels -->
+                    <div class="journal-indicators mb-3">
+                        <div class="indicator-row">
+                            {% if e.main_mood_level %}
+                            <div class="indicator-item" title="Humeur">
+                                <span class="indicator-emoji">🙂</span>
+                                <div class="indicator-bar">
+                                    {% for i in "12345" %}
+                                    <div class="indicator-dot {% if forloop.counter <= e.main_mood_level %}active{% endif %}"></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if e.energy_level %}
+                            <div class="indicator-item" title="Énergie">
+                                <span class="indicator-emoji">⚡</span>
+                                <div class="indicator-bar">
+                                    {% for i in "12345" %}
+                                    <div class="indicator-dot {% if forloop.counter <= e.energy_level %}active{% endif %}"></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if e.sleep_quality %}
+                            <div class="indicator-item" title="Sommeil">
+                                <span class="indicator-emoji">😴</span>
+                                <div class="indicator-bar">
+                                    {% for i in "12345" %}
+                                    <div class="indicator-dot {% if forloop.counter <= e.sleep_quality %}active{% endif %}"></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Points clés organisés -->
+                    <div class="journal-highlights mb-3">
+                        {% if e.main_subject %}
+                        <div class="highlight-item">
+                            <i class="fas fa-compass text-primary"></i>
+                            <span class="highlight-text">{{ e.main_subject|truncatechars:40 }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if e.favorite_moment %}
+                        <div class="highlight-item">
+                            <i class="fas fa-star text-warning"></i>
+                            <span class="highlight-text">{{ e.favorite_moment|truncatechars:40 }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if e.achievement %}
+                        <div class="highlight-item">
+                            <i class="fas fa-trophy text-success"></i>
+                            <span class="highlight-text">{{ e.achievement|truncatechars:40 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Badges contextuels -->
+                    <div class="journal-badges mb-3">
+                        {% if e.weather %}
+                        <span class="context-badge weather-{{ e.weather }}">
+                            <i class="fas fa-cloud"></i> {{ e.get_weather_display }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if e.physical_activity %}
+                        <span class="context-badge activity-{{ e.physical_activity }}">
+                            <i class="fas fa-running"></i> {{ e.get_physical_activity_display }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if e.meals_quality %}
+                        <span class="context-badge meals-{{ e.meals_quality }}">
+                            <i class="fas fa-utensils"></i> {{ e.get_meals_quality_display }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tags -->
+                    {% with tgs=e.tags.all %}
+                    {% if tgs %}
+                    <div class="journal-tags mb-3">
+                        {% for t in tgs %}
+                        <span class="journal-tag">#{{ t.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <!-- Actions -->
+                    <div class="journal-card-actions mt-auto">
+                        <div class="btn-group w-100" role="group">
+                            <a class="btn btn-outline-primary btn-sm journal-action-btn" 
+                               href="{% url 'journal:entry_detail' e.pk %}" 
+                               title="Voir les détails" data-toggle="tooltip" data-placement="top">
+                                <i class="fas fa-eye"></i>
+                                <span class="btn-label">Voir</span>
+                            </a>
+                            <a class="btn btn-outline-secondary btn-sm journal-action-btn" 
+                               href="{% url 'journal:entry_update' e.pk %}" 
+                               title="Modifier" data-toggle="tooltip" data-placement="top">
+                                <i class="fas fa-edit"></i>
+                                <span class="btn-label">Modifier</span>
+                            </a>
+                            <form method="post" action="{% url 'journal:entry_delete' e.pk %}" 
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?');" 
+                                  class="d-inline" title="Supprimer" data-toggle="tooltip" data-placement="top">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm journal-action-btn" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                    <span class="btn-label">Supprimer</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- État vide amélioré -->
+        <div class="col-12">
+            <div class="journal-empty-state text-center py-5">
+                <div class="empty-state-icon mb-4">
+                    <i class="fas fa-book-open fa-4x text-muted"></i>
+                </div>
+                <h3 class="empty-state-title h4 text-muted mb-3">Aucune entrée pour le moment</h3>
+                <p class="empty-state-text text-muted mb-4">Commencez votre aventure en créant votre première entrée de journal</p>
+                <a class="btn btn-primary btn-lg px-4" href="{% url 'journal:entry_create' %}">
+                    <i class="fas fa-plus-circle mr-2"></i>Créer ma première entrée
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination améliorée -->
+    {% if is_paginated %}
+    <div class="journal-pagination mt-5">
+        <nav aria-label="Navigation des pages">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link pagination-prev" 
+                       href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">
+                        <i class="fas fa-chevron-left mr-2"></i>Précédent
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link pagination-next" 
+                       href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">
+                        Suivant<i class="fas fa-chevron-right ml-2"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.journal-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+}
+
+/* En-tête */
+.journal-main-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.journal-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.journal-create-btn {
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Barre de recherche */
+.journal-search-form .input-group {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.journal-search-icon {
+    background: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+}
+
+.journal-search-input {
+    border: none;
+    padding: 12px 0;
+    font-size: 1rem;
+}
+
+.journal-search-input:focus {
+    box-shadow: none;
+}
+
+.journal-clear-search {
+    border: none;
+    background: white;
+    padding: 12px 20px;
+}
+
+.journal-search-btn {
+    border-radius: 0 16px 16px 0;
+    padding: 12px 24px;
+    font-weight: 600;
+}
+
+/* Statistiques */
+.journal-stats {
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 500;
+}
+
+/* Cartes d'entrées */
+.journal-card {
+    border-radius: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.journal-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card-image-container {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.journal-card-img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.journal-card:hover .journal-card-img {
+    transform: scale(1.1);
+}
+
+.journal-card-placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 3rem;
+}
+
+.card-date-overlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+}
+
+.date-badge {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--dark);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* En-tête de carte */
+.journal-card-header {
+    margin-bottom: 1rem;
+}
+
+.journal-meta-info {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.journal-time-badge,
+.journal-location-badge {
+    background: var(--gray-light);
+    color: var(--dark);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.journal-mood-indicator {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Titre et contenu */
+.journal-card-title {
+    color: var(--dark);
+    font-weight: 700;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.journal-content-preview {
+    color: var(--gray);
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+/* Indicateurs */
+.journal-indicators {
+    padding: 1rem 0;
+    border-top: 1px solid var(--gray-light);
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.indicator-row {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+}
+
+.indicator-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.indicator-emoji {
+    font-size: 1.2rem;
+}
+
+.indicator-bar {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+}
+
+.indicator-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gray-light);
+    transition: all 0.3s ease;
+}
+
+.indicator-dot.active {
+    background: var(--primary);
+    transform: scale(1.2);
+}
+
+/* Points clés */
+.journal-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.highlight-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.highlight-text {
+    color: var(--dark);
+    font-weight: 500;
+}
+
+/* Badges */
+.journal-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.context-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--gray-light);
+    color: var(--dark);
+}
+
+.weather-SUNNY { background: #fff9c4; color: #f57f17; }
+.weather-RAINY { background: #e3f2fd; color: #1565c0; }
+.activity-15MIN { background: #e8f5e8; color: #2e7d32; }
+.meals-GOOD { background: #fff3e0; color: #ef6c00; }
+
+/* Tags */
+.journal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.journal-tag {
+    background: rgba(139, 95, 191, 0.1);
+    color: var(--primary);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(139, 95, 191, 0.2);
+}
+
+/* Actions */
+.journal-card-actions {
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-light);
+}
+
+.journal-action-btn {
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    transition: all 0.2s ease;
+}
+
+.journal-action-btn .btn-label {
+    font-size: 0.75rem;
+}
+
+.journal-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* État vide */
+.journal-empty-state {
+    background: white;
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    box-shadow: var(--shadow);
+}
+
+.empty-state-icon {
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-weight: 600;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Pagination */
+.journal-pagination .pagination {
+    gap: 8px;
+}
+
+.journal-pagination .page-link {
+    border-radius: 12px;
+    border: 1px solid var(--gray-light);
+    color: var(--dark);
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: all 0.2s ease;
+}
+
+.journal-pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: var(--primary);
+    color: white;
+}
+
+.journal-pagination .page-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .journal-main-title {
+        font-size: 2rem;
+    }
+    
+    .journal-create-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .journal-action-btn .btn-label {
+        display: none;
+    }
+    
+    .indicator-row {
+        gap: 0.5rem;
+    }
+    
+    .indicator-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 576px) {
+    .journal-stats .row {
+        margin: 0 -8px;
+    }
+    
+    .journal-stats .col-6 {
+        padding: 0 8px;
+    }
+    
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.5rem;
+    }
+    
+    .stat-number {
+        font-size: 1.3rem;
+    }
+}
+</style>
+
+<script>
+// Animation au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation des cartes
+    const cards = document.querySelectorAll('.journal-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Animation des statistiques
+    const statNumbers = document.querySelectorAll('.stat-number');
+    statNumbers.forEach(stat => {
+        const finalNumber = parseInt(stat.textContent);
+        let current = 0;
+        const increment = finalNumber / 30;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= finalNumber) {
+                current = finalNumber;
+                clearInterval(timer);
+            }
+            stat.textContent = Math.round(current);
+        }, 50);
+    });
+    // Init tooltips (Bootstrap 4)
+    if (window.jQuery && typeof jQuery.fn.tooltip === 'function') {
+        jQuery('[data-toggle="tooltip"]').tooltip();
+    }
+});
+</script>
+{% endblock %}

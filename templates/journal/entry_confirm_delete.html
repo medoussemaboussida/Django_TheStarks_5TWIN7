@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Supprimer l'entrée</title>
+</head>
+<body>
+  <p><a href="{% url 'journal:entry_list' %}">← Retour</a></p>
+  <h1>Supprimer cette entrée ?</h1>
+  <p>{{ entry.entry_date }} - {{ entry.title }}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirmer</button>
+  </form>
+</body>
+</html>

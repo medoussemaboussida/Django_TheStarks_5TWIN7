@@ -1,0 +1,250 @@
+{% extends "admin/index.html" %}
+{% block content %}
+  <style>
+    .icon-scale { display: inline-flex; gap: 6px; vertical-align: middle; }
+    .icon-scale .unit { cursor: pointer; font-size: 20px; opacity: .35; transition: opacity .15s ease; }
+    .icon-scale .unit.filled { opacity: 1; }
+    .hidden-radios { display: none; }
+    .field-row { margin: .5rem 0; }
+    label.field-label { display: inline-block; width: 220px; font-weight: 600; }
+  </style>
+
+  <div class="container-fluid py-3">
+    <p><a class="btn btn-link" href="{% url 'journal:entry_list' %}">← Retour</a></p>
+    <h1 class="mb-3">{% if entry %}Modifier{% else %}Créer{% endif %} une entrée</h1>
+
+  <form method="post" action="{% if entry %}{% url 'journal:entry_update' entry.pk %}{% else %}{% url 'journal:entry_create' %}{% endif %}" enctype="multipart/form-data" novalidate class="card p-3 shadow-sm">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div style="color:#b00020; margin:.5rem 0;">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+    {# Champs principaux #}
+    <div class="field-row">
+      <label class="field-label">{{ form.title.label }}:</label>
+      {{ form.title }}
+      {% if form.title.errors %}<div style="color:#b00020;">{{ form.title.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.content.label }}:</label>
+      {{ form.content }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.entry_date.label }}:</label>
+      {{ form.entry_date }}
+      {% if form.entry_date.errors %}<div style="color:#b00020;">{{ form.entry_date.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.time_of_day.label }}:</label>
+      {{ form.time_of_day }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.mood.label }}:</label>
+      {{ form.mood }}
+      {% if form.mood.errors %}<div style="color:#b00020;">{{ form.mood.errors }}</div>{% endif %}
+    </div>
+
+    {# Échelles icônes en une ligne #}
+    <div class="field-row">
+      <label class="field-label">{{ form.main_mood_level.label }}:</label>
+      <div id="scale-mood" class="icon-scale" aria-label="Échelle d'humeur"></div>
+      <div class="hidden-radios">{{ form.main_mood_level }}</div>
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.energy_level.label }}:</label>
+      <div id="scale-energy" class="icon-scale" aria-label="Niveau d'énergie"></div>
+      <div class="hidden-radios">{{ form.energy_level }}</div>
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.sleep_quality.label }}:</label>
+      <div id="scale-sleep" class="icon-scale" aria-label="Qualité du sommeil"></div>
+      <div class="hidden-radios">{{ form.sleep_quality }}</div>
+    </div>
+
+    {# Autres champs #}
+    <div class="field-row">
+      <label class="field-label">{{ form.physical_health.label }}:</label>
+      {{ form.physical_health }}
+      {% if form.physical_health.errors %}<div style="color:#b00020;">{{ form.physical_health.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.location.label }}:</label>
+      {{ form.location }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.weather.label }}:</label>
+      {{ form.weather }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.season.label }}:</label>
+      {{ form.season }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.main_subject.label }}:</label>
+      {{ form.main_subject }}
+      {% if form.main_subject.errors %}<div style="color:#b00020;">{{ form.main_subject.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.secondary_themes.label }}:</label>
+      {{ form.secondary_themes }}
+      {% if form.secondary_themes.errors %}<div style="color:#b00020;">{{ form.secondary_themes.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.favorite_moment.label }}:</label>
+      {{ form.favorite_moment }}
+      {% if form.favorite_moment.errors %}<div style="color:#b00020;">{{ form.favorite_moment.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.challenge.label }}:</label>
+      {{ form.challenge }}
+      {% if form.challenge.errors %}<div style="color:#b00020;">{{ form.challenge.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.achievement.label }}:</label>
+      {{ form.achievement }}
+      {% if form.achievement.errors %}<div style="color:#b00020;">{{ form.achievement.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.surprise.label }}:</label>
+      {{ form.surprise }}
+      {% if form.surprise.errors %}<div style="color:#b00020;">{{ form.surprise.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.daily_goal.label }}:</label>
+      {{ form.daily_goal }}
+      {% if form.daily_goal.errors %}<div style="color:#b00020;">{{ form.daily_goal.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.accomplishments.label }}:</label>
+      {{ form.accomplishments }}
+      {% if form.accomplishments.errors %}<div style="color:#b00020;">{{ form.accomplishments.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.lesson_learned.label }}:</label>
+      {{ form.lesson_learned }}
+      {% if form.lesson_learned.errors %}<div style="color:#b00020;">{{ form.lesson_learned.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.gratitude.label }}:</label>
+      {{ form.gratitude }}
+      {% if form.gratitude.errors %}<div style="color:#b00020;">{{ form.gratitude.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.physical_activity.label }}:</label>
+      {{ form.physical_activity }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.meditation.label }}:</label>
+      {{ form.meditation }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.screen_time.label }}:</label>
+      {{ form.screen_time }}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.meals_quality.label }}:</label>
+      {{ form.meals_quality }}
+    </div>
+
+    <div class="field-row">
+      <label class="field-label">{{ form.tags.label }}:</label>
+      {{ form.tags }}
+      {% if form.tags.errors %}<div style="color:#b00020;">{{ form.tags.errors }}</div>{% endif %}
+    </div>
+    <div class="field-row">
+      <label class="field-label">{{ form.new_tags.label }}:</label>
+      {{ form.new_tags }}
+      {% if form.new_tags.help_text %}<div><small>{{ form.new_tags.help_text }}</small></div>{% endif %}
+    </div>
+
+    <h3 class="mt-3">Médias</h3>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+      <div style="color:#b00020;">{{ formset.non_form_errors }}</div>
+    {% endif %}
+    <div id="media-forms">
+      {% for f in formset %}
+        <fieldset class="media-form" style="margin-bottom:1rem; border:1px solid #ddd; padding:0.5rem;">
+          {% if f.non_field_errors %}
+            <div style="color:#b00020;">{{ f.non_field_errors }}</div>
+          {% endif %}
+          {{ f.as_p }}
+        </fieldset>
+      {% endfor %}
+    </div>
+    <p>
+      <button type="button" id="add-media" class="button radius-30 btn btn-outline-primary">+ Ajouter un média</button>
+    </p>
+
+    <template id="media-empty-form">
+      <fieldset class="media-form" style="margin-bottom:1rem; border:1px solid #ddd; padding:0.5rem;">
+        {{ formset.empty_form.as_p|safe }}
+      </fieldset>
+    </template>
+
+    <button type="submit" class="button button-lg radius-30 btn btn-primary">Enregistrer</button>
+  </form>
+
+  </div>
+
+  <script>
+    (function() {
+      const addBtn = document.getElementById('add-media');
+      const container = document.getElementById('media-forms');
+      const tmpl = document.getElementById('media-empty-form');
+      const totalInput = document.querySelector('input[name="{{ formset.prefix }}-TOTAL_FORMS"]');
+      if (!addBtn || !container || !tmpl || !totalInput) return;
+      addBtn.addEventListener('click', function() {
+        const total = parseInt(totalInput.value, 10);
+        let html = tmpl.innerHTML;
+        const regex = new RegExp('__prefix__', 'g');
+        html = html.replace(regex, total);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const fieldset = tempDiv.firstElementChild;
+        container.appendChild(fieldset);
+        totalInput.value = total + 1;
+      });
+    })();
+
+    // Icônes en une ligne pour les échelles (5 unités cliquables)
+    (function() {
+      function buildScale(containerId, fieldName, iconChar) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const radios = document.querySelectorAll('input[name="' + fieldName + '"]');
+        if (!radios.length) return;
+        function current() {
+          const r = Array.from(radios).find(r => r.checked);
+          return r ? parseInt(r.value, 10) : 0;
+        }
+        function setVal(v) {
+          const r = Array.from(radios).find(r => parseInt(r.value, 10) === v);
+          if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+        }
+        function render() {
+          const val = current();
+          container.querySelectorAll('.unit').forEach((el, idx) => {
+            const i = idx + 1;
+            el.textContent = iconChar; // single icon per unité
+            el.classList.toggle('filled', i <= val);
+          });
+        }
+        for (let i = 1; i <= 5; i++) {
+          const span = document.createElement('span');
+          span.className = 'unit';
+          span.setAttribute('role', 'button');
+          span.setAttribute('aria-label', fieldName + ' ' + i);
+          span.dataset.value = String(i);
+          span.addEventListener('click', () => { setVal(i); render(); });
+          container.appendChild(span);
+        }
+        render();
+      }
+      buildScale('scale-mood', 'main_mood_level', '🙂');
+      buildScale('scale-energy', 'energy_level', '⚡');
+      buildScale('scale-sleep', 'sleep_quality', '😴');
+    })();
+  </script>
+{% endblock %}
