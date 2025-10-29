@@ -28,6 +28,7 @@ urlpatterns = [
     path('home/', views.frontend_home, name='frontend_home'),
     path('profile/', views.profile_view, name='profile'),
     path('account/delete/', views.delete_account, name='delete_account'),
+    path('account/change-password/', views.change_password, name='change_password'),
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('admin-template/', views.admin_dashboard, name='admin_dashboard'),

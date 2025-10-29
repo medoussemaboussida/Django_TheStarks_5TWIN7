@@ -20,6 +20,15 @@ html, body { height: 100%; }
 .profile-hero-bg { padding: 16px 0 24px 0; }
 /* Bring profile content closer and overlap onto hero */
 .profile-section { padding-top: 0; padding-bottom: 64px; margin-top: -140px; position: relative; z-index: 6; }
+/* Ensure profile card overlaps hero */
+.profile-card {
+  margin-top: -40px;
+  position: relative;
+  z-index: 2;
+}
+/* Make sure modals are above any hero/navbar overlays */
+.modal { z-index: 200000; }
+.modal-backdrop { z-index: 199990; }
 /* Reduce the built-in hero vertical spacing from the Lindy kit on this page */
 .profile-hero .hero-section.hero-style-5 { padding-top: 0; padding-bottom: 10px; }
 .profile-hero-bg { padding: 4px 0 8px 0; }

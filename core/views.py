@@ -8,6 +8,8 @@ import re
 from datetime import datetime, date
 from .forms import SignupForm, EmailAuthForm
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 import json
 import urllib.parse
 import urllib.request
@@ -120,6 +122,50 @@ def profile_view(request):
             profile.save()
         messages.success(request, 'Profil mis à jour avec succès.')
         return redirect('profile')
+
+    # GET request: render the profile page
+    return render(request, 'frontend/profile.html', {'profile': profile})
+def change_password(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.method != 'POST':
+        messages.error(request, 'Action non autorisée.')
+        return redirect('profile')
+
+    current_password = request.POST.get('current_password', '')
+    new_password = request.POST.get('new_password', '')
+    confirm_password = request.POST.get('confirm_password', '')
+
+    field_errors = {}
+    # Verify current password
+    if not request.user.check_password(current_password):
+        field_errors['current_password'] = 'Mot de passe actuel incorrect.'
+
+    # New vs confirm
+    if new_password != confirm_password:
+        field_errors['confirm_password'] = 'La confirmation ne correspond pas.'
+
+    # Strength/validators
+    if not field_errors:
+        try:
+            validate_password(new_password, user=request.user)
+        except ValidationError as ve:
+            field_errors['new_password'] = ' '.join(ve.messages)
+
+    if field_errors:
+        # Re-render profile with errors and keep change password modal open via flag
+        profile = getattr(request.user, 'profile', None)
+        return render(request, 'frontend/profile.html', {
+            'profile': profile,
+            'pw_errors': field_errors,
+            'open_change_password': True,
+        })
+
+    # All good: set password
+    request.user.set_password(new_password)
+    request.user.save()
+    messages.success(request, 'Mot de passe modifié avec succès. Connectez-vous à nouveau.')
+    return redirect('login')
 
     return render(request, 'frontend/profile.html', {'profile': profile})
 
