@@ -19,6 +19,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from core import views
 from core.forms import PasswordResetRequestForm, StyledSetPasswordForm
+from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +30,7 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('admin-template/', views.admin_dashboard, name='admin_dashboard'),
+    path('summarizer/', include('summarizer.urls')),  # Ajout ici pour inclure les URLs de l'app summarizer
     # Password reset
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='admin/password_reset_form.html',
