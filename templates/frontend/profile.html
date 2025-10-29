@@ -140,12 +140,13 @@
                   </div>
                 </div>
 
-                <div class="actions mt-25 d-flex gap-2">
+                <div class="actions mt-25 d-flex gap-2 flex-wrap">
                   <a class="button radius-30" href="/password-reset/"><i class="lni lni-lock"></i> Changer le mot de passe</a>
                   <button type="button" class="button radius-30" id="btn_edit"><i class="lni lni-pencil"></i> Modifier</button>
                   <button type="submit" class="button radius-30 d-none" id="btn_save"><i class="lni lni-checkmark"></i> Enregistrer</button>
-                  <button type="button" class="button radius-30 outline d-none" id="btn_cancel"><i class="lni lni-close"></i> Annuler</button>
-                  <a class="button radius-30 outline" href="{% url 'logout' %}"><i class="lni lni-exit"></i> Se déconnecter</a>
+                  <button type="button" class="button radius-30" style="background:#ef4444;border-color:#ef4444;color:#fff" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                    <i class="lni lni-trash-can"></i> Supprimer le compte
+                  </button>
                 </div>
               </form>
             </div>
@@ -155,6 +156,29 @@
     </section>
 
     <a href="#" class="scroll-top"> <i class="lni lni-chevron-up"></i> </a>
+
+    <!-- Delete Account Modal -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteAccountModalLabel">Confirmer la suppression</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">Cette action est <strong>définitive</strong>. Votre compte et vos données seront supprimés.</p>
+            <p class="mb-0">Voulez-vous vraiment supprimer votre compte ?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <form method="post" action="{% url 'delete_account' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
     <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>

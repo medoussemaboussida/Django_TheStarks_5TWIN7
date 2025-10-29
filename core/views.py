@@ -122,3 +122,19 @@ def profile_view(request):
         return redirect('profile')
 
     return render(request, 'frontend/profile.html', {'profile': profile})
+
+def delete_account(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.method == 'POST':
+        user = request.user
+        logout(request)
+        try:
+            user.delete()
+            messages.success(request, "Votre compte a été supprimé.")
+        except Exception:
+            messages.error(request, "Impossible de supprimer le compte pour le moment.")
+        return redirect('login')
+    # Forbid GET deletion; just redirect back to profile
+    messages.error(request, "Action non autorisée.")
+    return redirect('profile')
