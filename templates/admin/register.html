@@ -51,21 +51,33 @@
           <div class="form-grid">
             <div class="full">
               {{ form.username }}
+              {% if form.username.errors %}
+                <div class="text-danger small">{{ form.username.errors|striptags }}</div>
+              {% endif %}
             </div>
             <div class="full">
               {{ form.email }}
+              {% if form.email.errors %}
+                <div class="text-danger small">{{ form.email.errors|striptags }}</div>
+              {% endif %}
             </div>
             <div>
               {{ form.password1 }}
+              {% if form.password1.errors %}
+                <div class="text-danger small">{{ form.password1.errors|striptags }}</div>
+              {% endif %}
             </div>
             <div>
               {{ form.password2 }}
+              {% if form.password2.errors %}
+                <div class="text-danger small">{{ form.password2.errors|striptags }}</div>
+              {% endif %}
             </div>
-            <div>
-              {{ form.first_name }}
-            </div>
-            <div>
-              {{ form.last_name }}
+            <div class="full">
+              {{ form.birth_date }}
+              {% if form.birth_date.errors %}
+                <div class="text-danger small">{{ form.birth_date.errors|striptags }}</div>
+              {% endif %}
             </div>
             <div class="full">
               <button type="submit" class="btn btn-primary btn-user btn-block">Create account</button>
