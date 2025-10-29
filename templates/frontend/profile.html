@@ -86,7 +86,6 @@
                   <div class="info ms-3">
                     <div class="d-flex align-items-center gap-10">
                       <h3 class="name mb-0" id="display_full_name">{{ request.user.get_full_name|default:request.user.username }}</h3>
-                      <input type="text" class="form-control d-none" id="input_full_name" name="full_name" value="{{ request.user.get_full_name|default:'' }}" placeholder="Nom complet">
                     </div>
                     <div class="chips mt-5">
                       <span class="chip"><i class="lni lni-calendar"></i> Inscrit le {{ request.user.date_joined|date:'Y-m-d H:i' }}</span>
@@ -105,8 +104,12 @@
                     <div class="icon"><i class="lni lni-user"></i></div>
                     <div class="content">
                       <div class="label">Nom d'utilisateur</div>
-                    <div class="value" id="display_username">{{ request.user.username }}</div>
-                    <input type="text" class="form-control d-none" id="input_username" name="username" value="{{ request.user.username }}" placeholder="Nom d'utilisateur">
+                      <div class="value" id="display_username">{{ request.user.username }}</div>
+                      <input type="text" class="form-control d-none" id="input_username" name="username" value="{{ request.user.username }}" placeholder="Nom d'utilisateur" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" title="3-30 caractères: lettres, chiffres, . _ -">
+                      <div class="invalid-feedback">3-30 caractères autorisés: lettres, chiffres, point, underscore, tiret.</div>
+                      {% if errors.username %}
+                        <div class="text-danger small mt-1">{{ errors.username }}</div>
+                      {% endif %}
                     </div>
                   </div>
                   <div class="info-item">
@@ -120,8 +123,12 @@
                     <div class="icon"><i class="lni lni-calendar"></i></div>
                     <div class="content">
                       <div class="label">Date de naissance</div>
-                    <div class="value" id="display_birth">{{ profile.birth_date|date:'Y-m-d'|default:'—' }}</div>
-                    <input type="date" class="form-control d-none" id="input_birth" name="birth_date" value="{{ profile.birth_date|date:'Y-m-d' }}">
+                      <div class="value" id="display_birth">{{ profile.birth_date|date:'Y-m-d'|default:'—' }}</div>
+                      <input type="date" class="form-control d-none" id="input_birth" name="birth_date" value="{{ profile.birth_date|date:'Y-m-d' }}" min="1900-01-01">
+                      <div class="invalid-feedback">Choisis une date valide (≥ 1900-01-01 et ≤ aujourd’hui).</div>
+                      {% if errors.birth_date %}
+                        <div class="text-danger small mt-1">{{ errors.birth_date }}</div>
+                      {% endif %}
                     </div>
                   </div>
                   <div class="info-item">
@@ -137,6 +144,7 @@
                   <a class="button radius-30" href="/password-reset/"><i class="lni lni-lock"></i> Changer le mot de passe</a>
                   <button type="button" class="button radius-30" id="btn_edit"><i class="lni lni-pencil"></i> Modifier</button>
                   <button type="submit" class="button radius-30 d-none" id="btn_save"><i class="lni lni-checkmark"></i> Enregistrer</button>
+                  <button type="button" class="button radius-30 outline d-none" id="btn_cancel"><i class="lni lni-close"></i> Annuler</button>
                   <a class="button radius-30 outline" href="{% url 'logout' %}"><i class="lni lni-exit"></i> Se déconnecter</a>
                 </div>
               </form>
@@ -152,5 +160,83 @@
     <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>
     <script src="{% static 'frontend/assets/js/wow.min.js' %}"></script>
     <script src="{% static 'frontend/assets/js/main.js' %}"></script>
+    <script>
+      (function(){
+        const btnEdit = document.getElementById('btn_edit');
+        const btnSave = document.getElementById('btn_save');
+        const btnCancel = document.getElementById('btn_cancel');
+        // Full name stays read-only
+        const displayUser = document.getElementById('display_username');
+        const inputUser = document.getElementById('input_username');
+        const displayBirth = document.getElementById('display_birth');
+        const inputBirth = document.getElementById('input_birth');
+        const form = document.getElementById('profile_form');
+
+        function enterEdit(){
+          // show inputs
+          inputUser.classList.remove('d-none');
+          inputBirth.classList.remove('d-none');
+          // hide displays
+          displayUser.classList.add('d-none');
+          displayBirth.classList.add('d-none');
+          // buttons
+          btnEdit.classList.add('d-none');
+          btnSave.classList.remove('d-none');
+          btnCancel.classList.remove('d-none');
+        }
+        function exitEdit(cancel){
+          if(cancel){
+            inputUser.value = displayUser.textContent.trim();
+            // birth date: keep original value attr already set server-side
+          }
+          inputUser.classList.add('d-none');
+          inputBirth.classList.add('d-none');
+          displayUser.classList.remove('d-none');
+          displayBirth.classList.remove('d-none');
+          btnEdit.classList.remove('d-none');
+          btnSave.classList.add('d-none');
+          btnCancel.classList.add('d-none');
+          // clear client validation styles
+          inputUser.classList.remove('is-invalid');
+          inputBirth.classList.remove('is-invalid');
+        }
+        if(btnEdit){ btnEdit.addEventListener('click', enterEdit); }
+        if(btnCancel){ btnCancel.addEventListener('click', function(){ exitEdit(true); }); }
+        // Auto-enter edit mode if server returned errors
+        {% if errors %}
+          enterEdit();
+        {% endif %}
+
+        // Client-side validation on input
+        function validateUsername(){
+          if(inputUser.classList.contains('d-none')) return true;
+          const ok = /^[A-Za-z0-9._-]{3,30}$/.test(inputUser.value);
+          inputUser.classList.toggle('is-invalid', !ok);
+          return ok;
+        }
+        function validateBirth(){
+          if(inputBirth.classList.contains('d-none')) return true;
+          const v = inputBirth.value;
+          if(!v){ inputBirth.classList.remove('is-invalid'); return true; }
+          const d = new Date(v);
+          const min = new Date('1900-01-01');
+          const today = new Date();
+          const ok = d >= min && d <= today;
+          inputBirth.classList.toggle('is-invalid', !ok);
+          return ok;
+        }
+        if(inputUser){ inputUser.addEventListener('input', validateUsername); }
+        if(inputBirth){ inputBirth.addEventListener('change', validateBirth); }
+        if(form){
+          form.addEventListener('submit', function(e){
+            const okU = validateUsername();
+            const okB = validateBirth();
+            if(!(okU && okB)){
+              e.preventDefault();
+            }
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

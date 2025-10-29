@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+import re
+from datetime import datetime, date
 from .forms import SignupForm, EmailAuthForm
 from django.conf import settings
 import json
@@ -81,33 +83,37 @@ def profile_view(request):
         return redirect('login')
     profile = getattr(request.user, 'profile', None)
     if request.method == 'POST':
+        errors = {}
         full_name = request.POST.get('full_name', '').strip()
         username = request.POST.get('username', '').strip()
         birth_date = request.POST.get('birth_date', '').strip()
 
         if username and username != request.user.username:
+            # pattern: letters, numbers, dot, underscore, dash; length 3..30
+            if not re.fullmatch(r'[A-Za-z0-9._-]{3,30}', username):
+                errors['username'] = "Nom d’utilisateur invalide (3-30 caractères, lettres/chiffres . _ -)."
             if User.objects.filter(username__iexact=username).exclude(pk=request.user.pk).exists():
-                messages.error(request, "Ce nom d’utilisateur est déjà pris.")
-                return render(request, 'frontend/profile.html', {'profile': profile})
-            request.user.username = username
+                errors['username'] = "Ce nom d’utilisateur est déjà pris."
+            if 'username' not in errors:
+                request.user.username = username
 
-        if full_name:
-            parts = full_name.split()
-            request.user.first_name = parts[0] if parts else ''
-            request.user.last_name = ' '.join(parts[1:]) if len(parts) > 1 else ''
+        # Full name is not editable per user's request; ignore any value
 
         if birth_date:
             try:
-                from datetime import datetime
                 d = datetime.strptime(birth_date, '%Y-%m-%d').date()
+                if d < date(1900, 1, 1) or d > date.today():
+                    errors['birth_date'] = "La date de naissance doit être entre 1900-01-01 et aujourd’hui."
                 if profile is None:
                     from .models import Profile
                     profile = Profile.objects.create(user=request.user, birth_date=d)
                 else:
                     profile.birth_date = d
             except Exception:
-                messages.error(request, "Date de naissance invalide.")
-                return render(request, 'frontend/profile.html', {'profile': profile})
+                errors['birth_date'] = "Date de naissance invalide (format YYYY-MM-DD)."
+        # if there are any errors, render template with errors and keep inputs visible
+        if errors:
+            return render(request, 'frontend/profile.html', {'profile': profile, 'errors': errors})
 
         request.user.save()
         if profile is not None:
