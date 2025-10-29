@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.forms import SetPasswordForm
 from .models import Profile
 from datetime import date
 
@@ -120,24 +122,26 @@ class EmailAuthForm(forms.Form):
             'class': 'form-control form-control-user',
             'placeholder': 'Email Address',
         })
-        self.fields['password'].widget.attrs.update({
-            'class': 'form-control form-control-user',
-            'placeholder': 'Password',
-        })
 
-    def clean(self):
-        cleaned = super().clean()
-        email = cleaned.get('email')
-        password = cleaned.get('password')
-        if email and password:
-            try:
-                user = User.objects.get(email__iexact=email)
-            except User.DoesNotExist:
-                user = None
-            if user is None or not user.check_password(password):
-                raise forms.ValidationError(self.error_messages['invalid_login'])
-            self.user_cache = user
-        return cleaned
+class StyledSetPasswordForm(SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['new_password1'].widget.attrs.update({
+            'class': 'form-control form-control-user',
+            'placeholder': 'New password',
+        })
+        self.fields['new_password2'].widget.attrs.update({
+            'class': 'form-control form-control-user',
+            'placeholder': 'Confirm new password',
+        })
 
     def get_user(self):
         return self.user_cache
+
+class PasswordResetRequestForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs.update({
+            'class': 'form-control form-control-user',
+            'placeholder': 'Email Address',
+        })
