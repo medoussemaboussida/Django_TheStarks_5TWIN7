@@ -122,6 +122,27 @@ class EmailAuthForm(forms.Form):
             'class': 'form-control form-control-user',
             'placeholder': 'Email Address',
         })
+        self.fields['password'].widget.attrs.update({
+            'class': 'form-control form-control-user',
+            'placeholder': 'Password',
+        })
+
+    def clean(self):
+        cleaned = super().clean()
+        email = cleaned.get('email')
+        password = cleaned.get('password')
+        if email and password:
+            try:
+                user = User.objects.get(email__iexact=email)
+            except User.DoesNotExist:
+                raise forms.ValidationError(self.error_messages['invalid_login'])
+            if not user.check_password(password):
+                raise forms.ValidationError(self.error_messages['invalid_login'])
+            self.user_cache = user
+        return cleaned
+
+    def get_user(self):
+        return self.user_cache
 
 class StyledSetPasswordForm(SetPasswordForm):
     def __init__(self, *args, **kwargs):
