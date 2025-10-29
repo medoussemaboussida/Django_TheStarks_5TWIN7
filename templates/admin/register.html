@@ -50,24 +50,27 @@
 
           <div class="form-grid">
             <div class="full input-with-icon">
+              <label class="visually-hidden" for="id_username">Username</label>
               {{ form.username }}
               <i class="far fa-user field-icon"></i>
               {% if form.username.errors %}
-                <div class="text-danger small">{{ form.username.errors|striptags }}</div>
+                <div class="text-danger small" id="err-username">{{ form.username.errors|striptags }}</div>
               {% endif %}
             </div>
             <div class="full input-with-icon">
+              <label class="visually-hidden" for="id_email">Email Address</label>
               {{ form.email }}
               <i class="far fa-envelope field-icon"></i>
               {% if form.email.errors %}
-                <div class="text-danger small">{{ form.email.errors|striptags }}</div>
+                <div class="text-danger small" id="err-email">{{ form.email.errors|striptags }}</div>
               {% endif %}
             </div>
             <div class="input-with-icon">
+              <label class="visually-hidden" for="id_password1">Password</label>
               {{ form.password1 }}
               <i class="fas fa-lock field-icon"></i>
               {% if form.password1.errors %}
-                <div class="text-danger small">{{ form.password1.errors|striptags }}</div>
+                <div class="text-danger small" id="err-password1">{{ form.password1.errors|striptags }}</div>
               {% endif %}
               <div class="strength-meter">
                 <div class="strength-meter-bar"><span id="pw-meter-fill"></span></div>
@@ -75,21 +78,23 @@
               </div>
             </div>
             <div class="input-with-icon">
+              <label class="visually-hidden" for="id_password2">Repeat Password</label>
               {{ form.password2 }}
               <i class="fas fa-key field-icon"></i>
               {% if form.password2.errors %}
-                <div class="text-danger small">{{ form.password2.errors|striptags }}</div>
+                <div class="text-danger small" id="err-password2">{{ form.password2.errors|striptags }}</div>
               {% endif %}
             </div>
             <div class="full input-with-icon">
+              <label class="visually-hidden" for="id_birth_date">Birth date</label>
               {{ form.birth_date }}
               <i class="far fa-calendar field-icon"></i>
               {% if form.birth_date.errors %}
-                <div class="text-danger small">{{ form.birth_date.errors|striptags }}</div>
+                <div class="text-danger small" id="err-birth_date">{{ form.birth_date.errors|striptags }}</div>
               {% endif %}
             </div>
             <div class="full">
-              <button type="submit" class="btn btn-primary btn-user btn-block">Create account</button>
+              <button id="register-submit" type="submit" class="btn btn-primary btn-user btn-block">Create account</button>
             </div>
           </div>
         </form>
@@ -142,6 +147,42 @@
 
         input.addEventListener('input', updateMeter);
         updateMeter();
+      })();
+    </script>
+    <script>
+      (function() {
+        // Submit state + scroll to first error + accessibility bindings
+        const form = document.querySelector('form.user');
+        const submitBtn = document.getElementById('register-submit');
+        if (form && submitBtn) {
+          form.addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing…';
+          });
+        }
+
+        // Add aria-invalid and aria-describedby where errors exist
+        const pairs = [
+          ['id_username','err-username'],
+          ['id_email','err-email'],
+          ['id_password1','err-password1'],
+          ['id_password2','err-password2'],
+          ['id_birth_date','err-birth_date']
+        ];
+        pairs.forEach(([fid,eid])=>{
+          const field = document.getElementById(fid);
+          const err = document.getElementById(eid);
+          if (field && err) {
+            field.setAttribute('aria-invalid','true');
+            field.setAttribute('aria-describedby', eid);
+          }
+        });
+
+        // Scroll to first error if present
+        const firstErr = document.querySelector('.text-danger');
+        if (firstErr) {
+          firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+        }
       })();
     </script>
 

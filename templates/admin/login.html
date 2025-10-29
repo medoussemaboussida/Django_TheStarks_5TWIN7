@@ -54,18 +54,21 @@
 
           <div class="form-grid">
             <div class="full input-with-icon">
+              <label class="visually-hidden" for="id_email">Email Address</label>
               {{ form.email }}
               <i class="far fa-envelope field-icon"></i>
               {% if form.email.errors %}
-                <div class="text-danger small">{{ form.email.errors|striptags }}</div>
+                <div class="text-danger small" id="err-email">{{ form.email.errors|striptags }}</div>
               {% endif %}
             </div>
             <div class="full input-with-icon">
+              <label class="visually-hidden" for="id_password">Password</label>
               {{ form.password }}
               <i class="fas fa-lock field-icon"></i>
               {% if form.password.errors %}
-                <div class="text-danger small">{{ form.password.errors|striptags }}</div>
+                <div class="text-danger small" id="err-password">{{ form.password.errors|striptags }}</div>
               {% endif %}
+              <button type="button" class="toggle-pass" data-target="id_password">Afficher/Masquer le mot de passe</button>
             </div>
             {% if recaptcha_site_key %}
             <div class="full">
@@ -74,7 +77,7 @@
             </div>
             {% endif %}
             <div class="full">
-              <button type="submit" class="btn btn-primary btn-user btn-block">Sign in</button>
+              <button id="login-submit" type="submit" class="btn btn-primary btn-user btn-block">Sign in</button>
             </div>
           </div>
         </form>
@@ -92,6 +95,49 @@
     <script src="{% static 'admin/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'admin/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
     <script src="{% static 'admin/js/sb-admin-2.min.js' %}"></script>
+    <script>
+      (function(){
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-pass').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-target');
+            const field = document.getElementById(id);
+            if (!field) return;
+            field.type = field.type === 'password' ? 'text' : 'password';
+          });
+        });
+
+        // Submit loading state
+        const form = document.querySelector('form.user');
+        const submitBtn = document.getElementById('login-submit');
+        if (form && submitBtn) {
+          form.addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing…';
+          });
+        }
+
+        // Add aria attrs where errors exist
+        const pairs = [
+          ['id_email','err-email'],
+          ['id_password','err-password']
+        ];
+        pairs.forEach(([fid,eid])=>{
+          const field = document.getElementById(fid);
+          const err = document.getElementById(eid);
+          if (field && err) {
+            field.setAttribute('aria-invalid','true');
+            field.setAttribute('aria-describedby', eid);
+          }
+        });
+
+        // Scroll to first error
+        const firstErr = document.querySelector('.text-danger');
+        if (firstErr) {
+          firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+      })();
+    </script>
 
 </body>
 
