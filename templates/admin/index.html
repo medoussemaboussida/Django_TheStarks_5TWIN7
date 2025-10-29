@@ -387,7 +387,12 @@
                         <div class="card shadow mb-4">
                           <div class="card-header py-3 d-flex align-items-center justify-content-between">
                             <h6 class="m-0 font-weight-bold text-primary">Utilisateurs inscrits</h6>
-                            <span class="text-muted small">Total: {{ users|length }}</span>
+                            <div class="d-flex align-items-center gap-2">
+                              <span class="text-muted small mr-2">Total: {{ users|length }}</span>
+                              <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addUserModal">
+                                <i class="fas fa-user-plus mr-1"></i> Ajouter un utilisateur
+                              </button>
+                            </div>
                           </div>
                           <div class="card-body">
                             <div class="table-responsive">
@@ -400,6 +405,7 @@
                                     <th>Inscription</th>
                                     <th>Dernière connexion</th>
                                     <th>Rôle</th>
+                                    <th>Actions</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -414,10 +420,18 @@
                                       {% if u.is_superuser %}
                                         <span class="badge badge-danger">Admin</span>
                                       {% elif u.is_staff %}
-                                        <span class="badge badge-info">Staff</span>
+                                        <span class="badge badge-info">Utilisateur</span>
                                       {% else %}
                                         <span class="badge badge-secondary">Utilisateur</span>
                                       {% endif %}
+                                    </td>
+                                    <td>
+                                      <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editUserModal-{{ u.id }}">
+                                        <i class="fas fa-edit"></i>
+                                      </button>
+                                      <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteUserModal-{{ u.id }}">
+                                        <i class="fas fa-trash"></i>
+                                      </button>
                                     </td>
                                   </tr>
                                   {% empty %}
@@ -772,6 +786,158 @@
 
     </div>
     <!-- End of Page Wrapper -->
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-labelledby="addUserModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addUserModalLabel">Ajouter un utilisateur</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form method="post" action="" novalidate>
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="au_username">Nom d’utilisateur</label>
+                <input type="text" class="form-control {% if au_errors.au_username %}is-invalid{% endif %}" id="au_username" name="au_username" value="{{ au_values.au_username|default:'' }}" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" required>
+                {% if au_errors.au_username %}<div class="invalid-feedback">{{ au_errors.au_username }}</div>{% endif %}
+              </div>
+              <div class="form-group">
+                <label for="au_email">Email (optionnel)</label>
+                <input type="email" class="form-control" id="au_email" name="au_email" value="{{ au_values.au_email|default:'' }}">
+              </div>
+              <div class="form-group">
+                <label for="au_password">Mot de passe</label>
+                <input type="password" class="form-control {% if au_errors.au_password %}is-invalid{% endif %}" id="au_password" name="au_password" required>
+                {% if au_errors.au_password %}<div class="invalid-feedback">{{ au_errors.au_password }}</div>{% endif %}
+              </div>
+              <div class="form-row">
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="au_is_staff" name="au_is_staff" {% if au_values.au_is_staff %}checked{% endif %}>
+                    <label class="custom-control-label" for="au_is_staff">Utilisateur</label>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="au_is_superuser" name="au_is_superuser" {% if au_values.au_is_superuser %}checked{% endif %}>
+                    <label class="custom-control-label" for="au_is_superuser">Admin</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Créer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% if open_add_user %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        if(window.jQuery && $('#addUserModal').modal){ $('#addUserModal').modal('show'); }
+      });
+    </script>
+    {% endif %}
+
+    {# Edit/Delete user modals #}
+    {% for u in users %}
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal-{{ u.id }}" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel-{{ u.id }}" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editUserModalLabel-{{ u.id }}">Modifier l’utilisateur</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form method="post" action="" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="eu_user_id" value="{{ u.id }}">
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="eu_username_{{ u.id }}">Nom d’utilisateur</label>
+                <input type="text" class="form-control {% if open_edit_user and edit_user_id == u.id and eu_errors.eu_username %}is-invalid{% endif %}" id="eu_username_{{ u.id }}" name="eu_username" value="{% if open_edit_user and edit_user_id == u.id %}{{ eu_values.eu_username }}{% else %}{{ u.username }}{% endif %}" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" required>
+                <div class="invalid-feedback">{% if open_edit_user and edit_user_id == u.id and eu_errors.eu_username %}{{ eu_errors.eu_username }}{% else %}3-30 caractères: lettres, chiffres, . _ -{% endif %}</div>
+              </div>
+              <div class="form-group">
+                <label for="eu_email_{{ u.id }}">Email (optionnel)</label>
+                <input type="email" class="form-control" id="eu_email_{{ u.id }}" name="eu_email" value="{% if open_edit_user and edit_user_id == u.id %}{{ eu_values.eu_email }}{% else %}{{ u.email }}{% endif %}">
+                <div class="invalid-feedback">Email invalide.</div>
+              </div>
+              <div class="form-group">
+                <label for="eu_password_{{ u.id }}">Nouveau mot de passe (optionnel)</label>
+                <input type="password" class="form-control {% if open_edit_user and edit_user_id == u.id and eu_errors.eu_password %}is-invalid{% endif %}" id="eu_password_{{ u.id }}" name="eu_password">
+                <div class="invalid-feedback">{% if open_edit_user and edit_user_id == u.id and eu_errors.eu_password %}{{ eu_errors.eu_password }}{% else %}Laisser vide pour ne pas changer le mot de passe.{% endif %}</div>
+              </div>
+              <div class="form-row">
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="eu_is_staff_{{ u.id }}" name="eu_is_staff" {% if open_edit_user and edit_user_id == u.id %}{% if eu_values.eu_is_staff %}checked{% endif %}{% else %}{% if u.is_staff %}checked{% endif %}{% endif %}>
+                    <label class="custom-control-label" for="eu_is_staff_{{ u.id }}">Utilisateur</label>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="eu_is_superuser_{{ u.id }}" name="eu_is_superuser" {% if open_edit_user and edit_user_id == u.id %}{% if eu_values.eu_is_superuser %}checked{% endif %}{% else %}{% if u.is_superuser %}checked{% endif %}{% endif %} {% if not request.user.is_superuser %}disabled{% endif %}>
+                    <label class="custom-control-label" for="eu_is_superuser_{{ u.id }}">Admin</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div class="modal fade" id="deleteUserModal-{{ u.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteUserModalLabel-{{ u.id }}" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteUserModalLabel-{{ u.id }}">Supprimer l’utilisateur</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="du_user_id" value="{{ u.id }}">
+            <div class="modal-body">
+              <p>Voulez-vous vraiment supprimer le compte <strong>{{ u.username }}</strong> ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-danger">Supprimer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if open_edit_user and edit_user_id %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        var id = '{{ edit_user_id }}';
+        var sel = '#editUserModal-' + id;
+        if(window.jQuery && $(sel).modal){ $(sel).modal('show'); }
+      });
+    </script>
+    {% endif %}
 
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">

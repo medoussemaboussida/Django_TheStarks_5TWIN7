@@ -21,6 +21,126 @@ def admin_dashboard(request):
         messages.error(request, "Accès refusé.")
         return redirect('root')
     users = User.objects.all().order_by('-date_joined')
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'add')
+        if action == 'add':
+            # Handle Add User form submission
+            username = request.POST.get('au_username', '').strip()
+            email = request.POST.get('au_email', '').strip()
+            password = request.POST.get('au_password', '')
+            is_staff = bool(request.POST.get('au_is_staff'))
+            is_superuser = bool(request.POST.get('au_is_superuser'))
+
+            au_errors = {}
+            if not re.fullmatch(r'[A-Za-z0-9._-]{3,30}', username):
+                au_errors['au_username'] = "Nom d’utilisateur invalide (3-30 caractères, lettres/chiffres . _ -)."
+            elif User.objects.filter(username__iexact=username).exists():
+                au_errors['au_username'] = "Ce nom d’utilisateur est déjà pris."
+
+            if not password:
+                au_errors['au_password'] = "Mot de passe requis."
+            else:
+                try:
+                    validate_password(password)
+                except ValidationError as ve:
+                    au_errors['au_password'] = ' '.join(ve.messages)
+
+            if au_errors:
+                return render(request, 'admin/index.html', {
+                    'users': users,
+                    'au_errors': au_errors,
+                    'open_add_user': True,
+                    'au_values': {
+                        'au_username': username,
+                        'au_email': email,
+                        'au_is_staff': is_staff,
+                        'au_is_superuser': is_superuser,
+                    }
+                })
+
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.is_staff = is_staff
+            user.is_superuser = is_superuser if request.user.is_superuser else False
+            user.save()
+            messages.success(request, 'Utilisateur ajouté avec succès.')
+            return redirect('admin_dashboard')
+
+        elif action == 'edit':
+            uid = request.POST.get('eu_user_id')
+            try:
+                target = User.objects.get(pk=uid)
+            except User.DoesNotExist:
+                messages.error(request, "Utilisateur introuvable.")
+                return redirect('admin_dashboard')
+
+            username = request.POST.get('eu_username', '').strip()
+            email = request.POST.get('eu_email', '').strip()
+            password = request.POST.get('eu_password', '')
+            is_staff = bool(request.POST.get('eu_is_staff'))
+            is_superuser = bool(request.POST.get('eu_is_superuser'))
+
+            eu_errors = {}
+            if not re.fullmatch(r'[A-Za-z0-9._-]{3,30}', username):
+                eu_errors['eu_username'] = "Nom d’utilisateur invalide (3-30 caractères, lettres/chiffres . _ -)."
+            elif User.objects.filter(username__iexact=username).exclude(pk=target.pk).exists():
+                eu_errors['eu_username'] = "Ce nom d’utilisateur est déjà pris."
+
+            if password:
+                try:
+                    validate_password(password, user=target)
+                except ValidationError as ve:
+                    eu_errors['eu_password'] = ' '.join(ve.messages)
+
+            # Protections
+            if target.is_superuser and not request.user.is_superuser:
+                messages.error(request, "Action non autorisée sur un administrateur.")
+                return redirect('admin_dashboard')
+
+            if eu_errors:
+                return render(request, 'admin/index.html', {
+                    'users': users,
+                    'eu_errors': eu_errors,
+                    'open_edit_user': True,
+                    'edit_user_id': target.pk,
+                    'eu_values': {
+                        'eu_username': username or target.username,
+                        'eu_email': email or target.email,
+                        'eu_is_staff': is_staff if 'eu_is_staff' in request.POST else target.is_staff,
+                        'eu_is_superuser': is_superuser if 'eu_is_superuser' in request.POST else target.is_superuser,
+                    }
+                })
+
+            target.username = username
+            target.email = email
+            target.is_staff = is_staff
+            if request.user.is_superuser:
+                target.is_superuser = is_superuser
+            if password:
+                target.set_password(password)
+            target.save()
+            messages.success(request, 'Utilisateur mis à jour.')
+            return redirect('admin_dashboard')
+
+        elif action == 'delete':
+            uid = request.POST.get('du_user_id')
+            try:
+                target = User.objects.get(pk=uid)
+            except User.DoesNotExist:
+                messages.error(request, "Utilisateur introuvable.")
+                return redirect('admin_dashboard')
+
+            if str(request.user.pk) == str(uid):
+                messages.error(request, "Vous ne pouvez pas supprimer votre propre compte.")
+                return redirect('admin_dashboard')
+            if target.is_superuser and not request.user.is_superuser:
+                messages.error(request, "Action non autorisée sur un administrateur.")
+                return redirect('admin_dashboard')
+
+            target.delete()
+            messages.success(request, 'Utilisateur supprimé.')
+            return redirect('admin_dashboard')
+
     return render(request, 'admin/index.html', {
         'users': users,
     })
