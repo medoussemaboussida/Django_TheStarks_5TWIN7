@@ -23,6 +23,31 @@ from django.http import JsonResponse
 
 from .models import Reclamation
 
+# Simple lexicon-based sentiment analysis (no external dependencies)
+POSITIVE_WORDS = {
+    'merci', 'bien', 'super', 'excellent', 'parfait', 'genial', 'satisfait',
+    'rapide', 'bravo', 'aime', 'content', 'heureux', 'cool', 'top', 'magnifique',
+}
+NEGATIVE_WORDS = {
+    'mauvais', 'horrible', 'lent', 'nul', 'probleme', 'insatisfait', 'mécontent',
+    'triste', 'déçu', 'decu', 'furieux', 'colère', 'colere', 'bug', 'erreur',
+    'nul', 'pire', 'catastrophe', 'lamentable', 'difficile', 'impossible',
+}
+
+
+def analyze_sentiment(text):
+    if not text:
+        return 'neutral'
+    cleaned = re.sub(r'[^A-Za-zÀ-ÿ\s]', ' ', text.lower())
+    tokens = cleaned.split()
+    pos = sum(1 for token in tokens if token in POSITIVE_WORDS)
+    neg = sum(1 for token in tokens if token in NEGATIVE_WORDS)
+    if pos > neg:
+        return 'positive'
+    if neg > pos:
+        return 'negative'
+    return 'neutral'
+
 def admin_dashboard(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -289,12 +314,14 @@ def submit_reclamation(request):
     if errors:
         return JsonResponse({'success': False, 'errors': errors}, status=400)
 
+    sentiment = analyze_sentiment(data['message'])
     rec = Reclamation.objects.create(
         user=request.user if request.user.is_authenticated else None,
         name=data['name'],
         number=data['number'],
         subject=data['subject'],
         message=data['message'],
+        sentiment=sentiment,
     )
 
     return JsonResponse({'success': True, 'id': rec.id})

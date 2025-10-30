@@ -17,6 +17,7 @@ class Reclamation(models.Model):
     number = models.CharField(max_length=32)
     subject = models.CharField(max_length=120)
     message = models.TextField()
+    sentiment = models.CharField(max_length=12, choices=[('positive','Positif'), ('neutral','Neutre'), ('negative','Négatif')], default='neutral')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
