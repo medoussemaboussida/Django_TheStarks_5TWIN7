@@ -149,10 +149,11 @@
           <h4 class="mb-3"><i class="lni lni-brush-alt"></i> Generate Illustration (AI)</h4>
           <form id="genForm">
             <input type="text" class="form-control mb-2" name="description" placeholder="Describe the image..." required />
-            <input type="hidden" name="provider" id="genProvider" value="local" />
-            <div class="d-flex gap-2">
-              <button class="btn btn-success" id="genLocalBtn" type="submit">Generate (Local)</button>
-              <button class="btn btn-outline-primary" id="genRealBtn" type="button">✨ Générer via IA réelle</button>
+            <input type="hidden" name="provider" id="genProvider" value="pollinations" />
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-success" id="genPollinationsBtn" type="submit">🎨 Pollinations (Fast)</button>
+              <button class="btn btn-outline-primary" id="genHuggingFaceBtn" type="button">🤗 Hugging Face (HD)</button>
+              <button class="btn btn-outline-secondary" id="genAutoBtn" type="button">✨ Auto (Best)</button>
             </div>
           </form>
           <div id="genResult" class="mt-2 muted"></div>
@@ -728,12 +729,16 @@
         if(res && res.meta){ metaDiv.textContent = `Provider: ${res.meta.provider||'local'} · Duration: ${res.meta.duration_ms||0} ms`; }
         loadGenerated();
       }catch(err){ out.textContent = 'Generation failed '+(err.status||''); }
-      finally{ btns.forEach(b=>b.disabled=false); if(providerInput) providerInput.value='local'; }
+      finally{ btns.forEach(b=>b.disabled=false); if(providerInput) providerInput.value='pollinations'; }
     });
 
-    // Real AI button: set provider=auto then submit
-    const genRealBtn=document.getElementById('genRealBtn');
-    if(genRealBtn){ genRealBtn.addEventListener('click', function(){ const p=document.getElementById('genProvider'); if(p) p.value='auto'; const f=this.closest('form'); if(f) f.requestSubmit(); }); }
+    // Hugging Face button: set provider=huggingface then submit
+    const genHuggingFaceBtn=document.getElementById('genHuggingFaceBtn');
+    if(genHuggingFaceBtn){ genHuggingFaceBtn.addEventListener('click', function(){ const p=document.getElementById('genProvider'); if(p) p.value='huggingface'; const f=this.closest('form'); if(f) f.requestSubmit(); }); }
+    
+    // Auto button: set provider=auto then submit (tries Pollinations first, then HF)
+    const genAutoBtn=document.getElementById('genAutoBtn');
+    if(genAutoBtn){ genAutoBtn.addEventListener('click', function(){ const p=document.getElementById('genProvider'); if(p) p.value='auto'; const f=this.closest('form'); if(f) f.requestSubmit(); }); }
 
     loadImages();
     loadGenerated();

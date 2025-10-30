@@ -92,9 +92,20 @@ class ImageGenerateView(APIView):
 
         try:
             override = (request.data.get('provider') or '').strip().lower()
-            provider = override if override and override != 'auto' else (getattr(settings, 'AI_PROVIDER', '') or 'local')
-            api_key = getattr(settings, 'AI_API_KEY', '') or getattr(settings, 'GROK_API_KEY', '') or getattr(settings, 'GROQ_API_KEY', '')
-            api_base = getattr(settings, 'AI_API_BASE', '') or getattr(settings, 'GROK_API_BASE', '') or getattr(settings, 'GROQ_API_BASE', '')
+            provider = override if override else getattr(settings, 'AI_PROVIDER', 'pollinations')
+            
+            # Get API key based on provider
+            if provider == 'huggingface':
+                api_key = getattr(settings, 'HUGGINGFACE_API_KEY', '')
+                api_base = 'https://api-inference.huggingface.co'
+            elif provider in ('groq', 'grok'):
+                api_key = getattr(settings, 'GROQ_API_KEY', '') or getattr(settings, 'GROK_API_KEY', '')
+                api_base = getattr(settings, 'GROQ_API_BASE', '') or getattr(settings, 'GROK_API_BASE', '')
+            else:
+                # For pollinations and auto, no key needed
+                api_key = getattr(settings, 'HUGGINGFACE_API_KEY', '')
+                api_base = getattr(settings, 'AI_API_BASE', '')
+            
             img_bytes, ext, meta = generate_illustration(description, api_key=api_key, api_base=api_base, provider=provider)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_502_BAD_GATEWAY)

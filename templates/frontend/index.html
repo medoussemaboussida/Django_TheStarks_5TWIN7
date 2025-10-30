@@ -69,17 +69,22 @@
                         <a class="page-scroll active" href="#home">Home</a>
                       </li>
                       <li class="nav-item">
-                        <a class="page-scroll" href="#feature">Summarizer</a>
+                        <a class="page-scroll" href="#feature">Features</a>
                       </li>
-
+                      <li class="nav-item">
+                        <a href="{% url 'summarizer_list' %}">Summarizer</a>
+                      </li>
+                      <li class="nav-item">
+                        <a href="{% url 'images_ui' %}">Images</a>
+                      </li>
+                      <li class="nav-item">
+                        <a href="{% url 'vocal_ui' %}">Vocal</a>
+                      </li>
+                      <li class="nav-item">
+                        <a href="{% url 'journal:entry_list' %}">Journal</a>
+                      </li>
                       <li class="nav-item">
                         <a class="page-scroll" href="#about">About</a>
-                      </li>
-                    <li class="nav-item">
-                      <a class="page-scroll" href="{% url 'journal:entry_list' %}">Journal</a>
-                    </li>
-                      <li class="nav-item">
-                        <a class="page-scroll" href="#pricing">Pricing</a>
                       </li>
                       <li class="nav-item">
                         <a class="page-scroll" href="#contact">Contact</a>
@@ -137,18 +142,53 @@
       
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-xxl-5 col-xl-5 col-lg-7 col-md-8">
+          <div class="col-xxl-8 col-xl-8 col-lg-10 col-md-10">
             <div class="section-title text-center mb-60">
-              <h3 class="mb-15 wow fadeInUp" data-wow-delay=".2s">Let's talk</h3>&nbsp;&nbsp;&nbsp;
-       <div class="row justify-content-center">
-          <div class="col-12 text-center">
-            <a href="{% url 'summarizer_list' %}" class="button button-lg radius-50">Go to Summarizer</a>
-          </div>
-        </div>
+              <h3 class="mb-15 wow fadeInUp" data-wow-delay=".2s">Our AI-Powered Features</h3>
+              <p class="wow fadeInUp" data-wow-delay=".3s">Explore our powerful tools for text, voice, and image processing</p>
+            </div>
+            
+            <div class="row g-4 justify-content-center">
+              <!-- Summarizer -->
+              <div class="col-lg-4 col-md-6">
+                <div class="feature-card text-center wow fadeInUp" data-wow-delay=".2s" style="padding:30px; background:#fff; border-radius:15px; box-shadow:0 4px 16px rgba(0,0,0,.08); transition:all .3s">
+                  <div class="feature-icon mb-3" style="font-size:3rem">📝</div>
+                  <h5 class="mb-3">Summarizer</h5>
+                  <p class="mb-4" style="color:#6b7280; font-size:.9rem">Summarize long texts instantly with AI</p>
+                  <a href="{% url 'summarizer_list' %}" class="button button-lg radius-50" style="width:100%">Open Summarizer</a>
+                </div>
+              </div>
+              
+              <!-- Images -->
+              <div class="col-lg-4 col-md-6">
+                <div class="feature-card text-center wow fadeInUp" data-wow-delay=".3s" style="padding:30px; background:#fff; border-radius:15px; box-shadow:0 4px 16px rgba(0,0,0,.08); transition:all .3s">
+                  <div class="feature-icon mb-3" style="font-size:3rem">🖼️</div>
+                  <h5 class="mb-3">Image Processing</h5>
+                  <p class="mb-4" style="color:#6b7280; font-size:.9rem">Analyze, enhance and generate images with AI</p>
+                  <a href="{% url 'images_ui' %}" class="button button-lg radius-50" style="width:100%">Open Images</a>
+                </div>
+              </div>
+              
+              <!-- Vocal -->
+              <div class="col-lg-4 col-md-6">
+                <div class="feature-card text-center wow fadeInUp" data-wow-delay=".4s" style="padding:30px; background:#fff; border-radius:15px; box-shadow:0 4px 16px rgba(0,0,0,.08); transition:all .3s">
+                  <div class="feature-icon mb-3" style="font-size:3rem">🎙️</div>
+                  <h5 class="mb-3">Vocal Notes</h5>
+                  <p class="mb-4" style="color:#6b7280; font-size:.9rem">Record, transcribe and analyze voice notes</p>
+                  <a href="{% url 'vocal_ui' %}" class="button button-lg radius-50" style="width:100%">Open Vocal</a>
+                </div>
+              </div>
             </div>
           </div>
-
+        </div>
       </div>
+      
+      <style>
+        .feature-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 24px rgba(0,0,0,.12) !important;
+        }
+      </style>
     </section>
     <!-- ========================= feature style-5 end ========================= -->
 

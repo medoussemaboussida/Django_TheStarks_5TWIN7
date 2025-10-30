@@ -66,9 +66,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'core',
     'journal',
     'summarizer',
+    'vocal',
+    'image_processing',
 ]
 
 MIDDLEWARE = [
@@ -159,12 +162,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Auth redirects
-LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/journal/'
-
-# Media (uploaded files)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # reCAPTCHA configuration
 # For local development, set your keys directly here (DO NOT commit real prod keys)
@@ -205,8 +203,17 @@ elif os.getenv('SMTP_ENABLED', '0') == '1':
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@localhost')
 
-# Grok (xAI) API configuration
-# Set GROK_API_KEY in your environment or .env. Example:
-# GROK_API_KEY=...  GROK_API_BASE=https://api.x.ai/v1
+# AI API configuration
+# Grok/Groq API (for text generation, transcription, etc.)
 GROK_API_KEY = os.getenv('GROK_API_KEY', '')
-GROK_API_BASE = os.getenv('GROK_API_BASE', 'https://api.x.ai/v1')
+GROK_API_BASE = os.getenv('GROK_API_BASE', 'https://api.groq.com/openai/v1')
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', os.getenv('GROK_API_KEY', ''))
+GROQ_API_BASE = os.getenv('GROQ_API_BASE', os.getenv('GROK_API_BASE', 'https://api.groq.com/openai/v1'))
+
+# Hugging Face API (for image generation with Stable Diffusion)
+HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY', '')
+
+# AI Provider for image generation (pollinations, huggingface, auto, local)
+AI_PROVIDER = os.getenv('AI_PROVIDER', 'pollinations')
+AI_API_KEY = os.getenv('HUGGINGFACE_API_KEY', '')  # Default to HF key
+AI_API_BASE = 'https://api-inference.huggingface.co'
