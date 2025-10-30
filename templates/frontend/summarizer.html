@@ -103,7 +103,7 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent6">
                   <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="page-scroll" href="{% url 'frontend_home' %}#home">Home</a></li>
-                    <li class="nav-item"><a class="page-scroll active" href="#feature">Summarizer</a></li>
+                    <li class="nav-item"><a class="page-scroll active"  href="{% url 'summarizer_list' %}#summarizer_list">Summarizer</a></li>
                   </ul>
                 </div>
               </nav>
@@ -188,21 +188,27 @@
 
                       <!-- ACTIONS ALIGNÉES SUR LA MÊME LIGNE -->
                       <td class="actions-cell">
+                        <!-- Modifier -->
                         <a href="{% url 'summarizer_update' summarizer.pk %}" class="btn-action btn-warning" title="Modifier">
                           <i class="lni lni-pencil"></i>
                         </a>
 
+                        <!-- Supprimer -->
                         <form method="post" action="{% url 'summarizer_delete' summarizer.pk %}" style="display: inline;" class="delete-form">
                           {% csrf_token %}
                           <button type="button" class="btn-action btn-danger delete-btn" title="Supprimer">
                             <i class="lni lni-trash"></i>
                           </button>
                         </form>
-                           <!-- ICÔNE GROQ (MAGIC WAND) -->
+
+                        <!-- Trouver solution (Groq IA) -->
                         <form method="post" action="{% url 'summarizer_generate' summarizer.pk %}" style="display: inline;" class="d-inline">
                           {% csrf_token %}
-                          <button type="submit" class="btn-action btn-success position-relative" title="Générer avec Groq IA">
-                            <i class="lni lni-magic-wand"></i>
+                          <button type="submit" 
+                                  class="btn btn-success position-relative d-flex align-items-center gap-2 px-3 py-2" 
+                                  style="border-radius: 8px; font-size: 0.875rem; min-width: 130px; justify-content: center;" 
+                                  title="Trouver une solution avec Groq IA">
+                            <span class="button-text">Trouver solution</span>
                             <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                           </button>
                         </form>
@@ -228,6 +234,7 @@
     </section>
 
     <!-- MODALS -->
+    <!-- Summary Modal -->
     <div class="modal fade" id="summaryModal" tabindex="-1">
       <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -245,6 +252,7 @@
       </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -268,7 +276,7 @@
     <script src="{% static 'frontend/assets/js/main.js' %}"></script>
 
     <script>
-      // CSRF
+      // CSRF Token
       function getCookie(name) {
         let v = null;
         document.cookie.split(';').forEach(c => {
@@ -279,19 +287,25 @@
       }
       const csrftoken = getCookie('csrftoken');
 
-      // DELETE
+      // === SUPPRESSION : Modal + Submit ===
       let deleteForm = null;
       document.addEventListener('click', e => {
         const btn = e.target.closest('.delete-btn');
         if (btn) {
           e.preventDefault();
           deleteForm = btn.closest('form');
-          new bootstrap.Modal('#deleteModal').show();
+          const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+          modal.show();
         }
       });
-      document.getElementById('confirmDelete').addEventListener('click', () => deleteForm?.submit());
 
-      // SUMMARY MODAL
+      document.getElementById('confirmDelete').addEventListener('click', () => {
+        if (deleteForm) {
+          deleteForm.submit();
+        }
+      });
+
+      // === MODAL RÉSUMÉ ===
       document.querySelectorAll('.summary-cell').forEach(cell => {
         cell.addEventListener('click', () => {
           document.getElementById('modalTitle').textContent = cell.dataset.title;
@@ -299,17 +313,19 @@
         });
       });
 
-      // SPINNER FOR GROQ BUTTON
-      document.querySelectorAll('form[action*="generate"]').forEach(form => {
+      // === SPINNER POUR "TROUVER SOLUTION" UNIQUEMENT ===
+      document.querySelectorAll('form[action*="generate"] button').forEach(btn => {
+        const form = btn.closest('form');
         form.addEventListener('submit', () => {
-          const btn = form.querySelector('button');
-          btn.querySelector('i').classList.add('d-none');
-          btn.querySelector('.spinner-border').classList.remove('d-none');
+          const text = btn.querySelector('.button-text');
+          const spinner = btn.querySelector('.spinner-border');
+          if (text) text.classList.add('d-none');
+          if (spinner) spinner.classList.remove('d-none');
           btn.disabled = true;
         });
       });
 
-      // FILTRES
+      // === FILTRES MOIS/ANNÉE ===
       const table = document.getElementById('summarizer-table');
       const rows = table.querySelectorAll('tbody tr[data-month]');
 
