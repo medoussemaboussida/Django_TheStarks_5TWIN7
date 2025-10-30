@@ -17,6 +17,8 @@ import json
 import json
 import urllib.parse
 import urllib.request
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 def admin_dashboard(request):
     if not request.user.is_authenticated:
@@ -371,6 +373,88 @@ def profile_view(request):
 
     # GET request: render the profile page
     return render(request, 'frontend/profile.html', {'profile': profile})
+
+@csrf_exempt
+def grok_chat(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except Exception:
+        data = {}
+    messages = data.get('messages') or []
+    prompt = data.get('prompt')
+    if not messages and prompt:
+        messages = [{'role': 'user', 'content': prompt}]
+    if not messages:
+        return JsonResponse({'error': 'messages or prompt required'}, status=400)
+
+    api_key = getattr(settings, 'GROK_API_KEY', '')
+    # Default to Groq endpoint unless overridden in env
+    api_base = getattr(settings, 'GROK_API_BASE', 'https://api.groq.com/openai/v1')
+    if not api_key:
+        return JsonResponse({'error': 'Server missing GROK_API_KEY'}, status=500)
+
+    # Align with user's working params
+    model = data.get('model', 'llama-3.3-70b-versatile')
+    payload = {
+        'model': model,
+        'messages': messages,
+        'temperature': data.get('temperature', 0.5),
+        'max_tokens': data.get('max_tokens', 512),
+        'stream': False,
+    }
+    try:
+        req = urllib.request.Request(
+            api_base.rstrip('/') + '/chat/completions',
+            data=json.dumps(payload).encode('utf-8'),
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            }
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            body = resp.read().decode('utf-8')
+            out = json.loads(body)
+    except urllib.error.HTTPError as e:
+        try:
+            err_body = e.read().decode('utf-8')
+        except Exception:
+            err_body = ''
+        info = {'error': 'Upstream API error', 'status': e.code}
+        if settings.DEBUG:
+            info['details'] = err_body
+        # For Groq, no special fallback unless client requests another
+        if model != 'llama-3.3-70b-versatile':
+            return JsonResponse(info, status=502)
+        try:
+            payload['model'] = 'llama-3.1-8b-instant'
+            req = urllib.request.Request(
+                api_base.rstrip('/') + '/chat/completions',
+                data=json.dumps(payload).encode('utf-8'),
+                headers={
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json',
+                }
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                body = resp.read().decode('utf-8')
+                out = json.loads(body)
+        except Exception:
+            return JsonResponse(info, status=502)
+    except Exception as e:
+        info = {'error': 'Upstream API error'}
+        if settings.DEBUG:
+            info['details'] = str(e)
+        return JsonResponse(info, status=502)
+
+    reply = ''
+    try:
+        reply = (out.get('choices') or [{}])[0].get('message', {}).get('content', '')
+    except Exception:
+        reply = ''
+    return JsonResponse({'reply': reply, 'raw': out})
+
 def change_password(request):
     if not request.user.is_authenticated:
         return redirect('login')

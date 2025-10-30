@@ -34,6 +34,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('admin-template/', views.admin_dashboard, name='admin_dashboard'),
     path('summarizer/', include('summarizer.urls')),  # Ajout ici pour inclure les URLs de l'app summarizer
+    path('api/grok-chat/', views.grok_chat, name='grok_chat'),
     # Password reset
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='admin/password_reset_form.html',
