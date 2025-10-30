@@ -227,23 +227,9 @@
                       <a class="page-scroll" href="{% url 'frontend_home' %}#home">Home</a>
                     </li>
                     <li class="nav-item">
-                      <a class="page-scroll active" href="#feature">Summarizer</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="page-scroll" href="{% url 'frontend_home' %}#about">About</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="page-scroll" href="{% url 'frontend_home' %}#pricing">Pricing</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="page-scroll" href="{% url 'frontend_home' %}#contact">Contact</a>
-                    </li>
+                      <a class="page-scroll active"  href="{% url 'summarizer_list' %}#summarizer_list">Summarizer</a>
+                    </li>       
                   </ul>
-                </div>
-                
-                <div class="header-action d-flex">
-                  <a href="#0"> <i class="lni lni-cart"></i> </a>
-                  <a href="#0"> <i class="lni lni-alarm"></i> </a>
                 </div>
               </nav>
             </div>
@@ -282,10 +268,6 @@
                 <div class="form-group">
                   <label class="form-label"><i class="lni lni-pencil"></i> Entrée Utilisateur <span class="required">*</span></label>
                   <textarea name="user_input" class="form-control" required></textarea>
-                </div>
-                <div class="form-group">
-                  <label class="form-label"><i class="lni lni-text"></i> Résumé</label>
-                  <textarea name="summary" class="form-control"></textarea>
                 </div>
                 <button type="submit" class="btn btn-submit"><i class="lni lni-checkmark"></i> Enregistrer</button>
                 <a href="{% url 'summarizer_list' %}" class="btn btn-secondary ms-2"><i class="lni lni-close"></i> Annuler</a>

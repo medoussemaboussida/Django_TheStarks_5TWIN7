@@ -5,506 +5,89 @@
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title>Story'IA - Summarizer</title>
-    <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- ========================= CSS here ========================= -->
+    <!-- CSS -->
     <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}" />
     <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}"/>
-    <link rel="stylesheet" href="{% static 'frontend/assets/css/tiny-slider.css' %}"/>
     <link rel="stylesheet" href="{% static 'frontend/assets/css/animate.css' %}"/>
     <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}"/>
     
     <style>
-      :root {
-        --primary-color: #007bff;
-        --primary-dark: #0056b3;
-        --secondary-color: #6c757d;
-        --success-color: #28a745;
-        --warning-color: #ffc107;
-        --danger-color: #dc3545;
-        --info-color: #17a2b8;
-        --light-bg: #f8f9fa;
-        --white: #ffffff;
-        --border-color: #dee2e6;
-        --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
-        --shadow-md: 0 4px 20px rgba(0,0,0,0.1);
-        --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
-        --transition: all 0.3s ease;
-      }
+      :root { --primary-color: #007bff; --success-color: #28a745; }
+      body { background-color: #f8f9fa; font-family: system-ui; }
 
-      body {
-        background-color: var(--light-bg);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      }
+      .table-container { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; margin-top: 24px; }
+      .table thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+      .table th { color: white; font-weight: 600; text-transform: uppercase; font-size: 0.813rem; }
+      .table td { vertical-align: middle; padding: 16px; }
+      .table-hover tbody tr:hover { background-color: #f7fafc; transform: scale(1.01); }
 
-      /* ===== TABLE CONTAINER ===== */
-      .table-container {
-        background: var(--white);
-        border-radius: 16px;
-        box-shadow: var(--shadow-md);
-        overflow: hidden;
-        margin-top: 24px;
-        transition: var(--transition);
-      }
+      .truncated { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+      .truncated:hover { color: #667eea; text-decoration: underline; }
 
-      .table-container:hover {
-        box-shadow: var(--shadow-lg);
-      }
-
-      /* ===== TABLE STYLES ===== */
-      .table {
-        margin-bottom: 0;
-      }
-
-      .table thead {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      .table th {
-        background: transparent;
-        color: var(--white);
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.813rem;
-        letter-spacing: 0.5px;
-        border: none;
-        padding: 18px 16px;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-      }
-
-      .table td {
-        vertical-align: middle;
-        padding: 16px;
-        border-color: var(--border-color);
-        color: #2d3748;
-        font-size: 0.938rem;
-      }
-
-      .table-hover tbody tr {
-        transition: var(--transition);
-        cursor: pointer;
-      }
-
-      .table-hover tbody tr:hover {
-        background-color: #f7fafc;
-        transform: scale(1.01);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      }
-
-      .table .truncated {
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        position: relative;
-      }
-
-      /* ===== ADD BUTTON ===== */
-      .btn-add {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        color: var(--white);
-        padding: 14px 32px;
-        font-weight: 600;
-        font-size: 0.938rem;
-        border-radius: 50px;
-        transition: var(--transition);
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        display: inline-flex;
+      .btn-add { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; border-radius: 50px; }
+      
+      /* BOUTONS = MÊME TAILLE & ALIGNÉS */
+      .actions-cell {
+        display: flex;
         align-items: center;
-        gap: 8px;
-        cursor: pointer;
+        gap: 6px;
+        flex-wrap: nowrap;
       }
-
-      .btn-add:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        color: var(--white);
-      }
-
-      .btn-add i {
-        font-size: 1.125rem;
-      }
-
-      /* ===== ACTION BUTTONS ===== */
       .btn-action {
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        transition: var(--transition);
-        border: none;
-        margin-right: 6px;
-        display: inline-flex;
+        width: 36px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        display: flex !important;
         align-items: center;
         justify-content: center;
-        min-width: 36px;
-        height: 36px;
-        cursor: pointer;
-      }
-
-      .btn-action i {
         font-size: 1rem;
-      }
-
-      .btn-action:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      }
-
-      .btn-info {
-        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-        color: var(--white);
-      }
-
-      .btn-warning {
-        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-        color: #212529;
-      }
-
-      .btn-danger {
-        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        color: var(--white);
-      }
-
-      /* ===== MODALS ===== */
-      .modal-content {
-        border-radius: 20px;
+        transition: all 0.3s ease;
         border: none;
-        box-shadow: var(--shadow-lg);
-        overflow: hidden;
       }
+      .btn-action:hover { transform: translateY(-2px); }
 
-      .modal-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: var(--white);
-        border: none;
-        padding: 24px 32px;
-      }
+      .btn-success { background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; }
+      .btn-warning { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #212529; }
+      .btn-danger { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
 
-      .modal-title {
-        font-weight: 700;
-        font-size: 1.5rem;
+      /* FILTRES SUR LA MÊME LIGNE */
+      .top-bar {
         display: flex;
+        justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
         gap: 12px;
+        margin-bottom: 16px;
       }
-
-      .modal-title i {
-        font-size: 1.75rem;
-      }
-
-      .modal-header .btn-close {
-        filter: brightness(0) invert(1);
-        opacity: 0.8;
-      }
-
-      .modal-header .btn-close:hover {
-        opacity: 1;
-      }
-
-      .modal-body {
-        padding: 32px;
-        background-color: #fafbfc;
-      }
-
-      .modal-footer {
-        padding: 20px 32px;
-        background-color: var(--white);
-        border-top: 1px solid var(--border-color);
-      }
-
-      /* ===== FORM STYLES ===== */
-      .form-group {
-        margin-bottom: 24px;
-      }
-
-      .form-label {
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 10px;
-        font-size: 0.938rem;
+      .filter-group {
         display: flex;
-        align-items: center;
         gap: 8px;
-      }
-
-      .form-label i {
-        color: #667eea;
-        font-size: 1.125rem;
-      }
-
-      .form-label .required {
-        color: var(--danger-color);
-        margin-left: 4px;
-      }
-
-      .form-control,
-      .form-select {
-        border-radius: 12px;
-        border: 2px solid var(--border-color);
-        padding: 12px 16px;
-        font-size: 0.938rem;
-        transition: var(--transition);
-        background-color: var(--white);
-      }
-
-      .form-control:focus,
-      .form-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        background-color: var(--white);
-      }
-
-      textarea.form-control {
-        min-height: 120px;
-        resize: vertical;
-      }
-
-      .form-text {
-        font-size: 0.813rem;
-        color: var(--secondary-color);
-        margin-top: 6px;
-        display: block;
-      }
-
-      /* ===== SUBMIT BUTTONS ===== */
-      .btn-submit {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        color: var(--white);
-        padding: 12px 32px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: var(--transition);
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        display: inline-flex;
         align-items: center;
-        gap: 8px;
       }
-
-      .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        color: var(--white);
-      }
-
-      .btn-submit i {
-        font-size: 1.125rem;
-      }
-
-      .btn-secondary {
-        background: var(--secondary-color);
-        border: none;
-        color: var(--white);
-        padding: 12px 24px;
-        border-radius: 12px;
-        font-weight: 500;
-        transition: var(--transition);
-      }
-
-      .btn-secondary:hover {
-        background: #5a6268;
-        transform: translateY(-2px);
-      }
-
-      /* ===== EMPTY STATE ===== */
-      .empty-state {
-        text-align: center;
-        padding: 80px 20px;
-        color: var(--secondary-color);
-      }
-
-      .empty-state i {
-        font-size: 6rem;
-        margin-bottom: 24px;
-        opacity: 0.3;
-        color: #667eea;
-      }
-
-      .empty-state h5 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-        color: #2d3748;
-      }
-
-      .empty-state p {
-        font-size: 1rem;
-        color: var(--secondary-color);
-      }
-
-      /* ===== LOADING SPINNER ===== */
-      .spinner-wrapper {
-        display: none;
-        text-align: center;
-        padding: 20px;
-      }
-
-      .spinner-wrapper.active {
-        display: block;
-      }
-
-      .spinner-border {
-        width: 3rem;
-        height: 3rem;
-        border-width: 0.3rem;
-        color: #667eea;
-      }
-
-      /* ===== DETAIL VIEW ===== */
-      .detail-card {
-        background: var(--white);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        border: 2px solid var(--border-color);
-        transition: var(--transition);
-      }
-
-      .detail-card:hover {
-        border-color: #667eea;
-        box-shadow: var(--shadow-sm);
-      }
-
-      .detail-label {
-        font-weight: 600;
-        color: #667eea;
+      .form-select-sm {
         font-size: 0.875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .detail-label i {
-        font-size: 1rem;
-      }
-
-      .detail-content {
-        background-color: #f7fafc;
-        padding: 16px;
-        border-radius: 8px;
-        color: #2d3748;
-        font-size: 0.938rem;
-        line-height: 1.6;
-        border-left: 4px solid #667eea;
-      }
-
-      /* ===== ALERTS ===== */
-      .alert {
-        border-radius: 12px;
-        padding: 16px 20px;
-        border: none;
-        margin-bottom: 20px;
-      }
-
-      .alert-success {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        color: #155724;
-      }
-
-      .alert-danger {
-        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-        color: #721c24;
-      }
-
-      /* ===== BADGE ===== */
-      .badge {
         padding: 6px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.75rem;
+        border-radius: 8px;
+        min-width: 120px;
       }
 
-      /* ===== RESPONSIVE ===== */
-      @media (max-width: 768px) {
-        .table {
-          font-size: 0.813rem;
-        }
-        
-        .table th,
-        .table td {
-          padding: 12px 8px;
-        }
+      .modal-content { border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+      .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+      .modal-title { font-weight: 700; font-size: 1.5rem; display: flex; align-items: center; gap: 12px; }
+      .modal-body { padding: 32px; background-color: #fafbfc; font-size: 1rem; line-height: 1.7; }
+      .modal-body pre { background: #f1f3f5; padding: 16px; border-radius: 12px; white-space: pre-wrap; font-family: inherit; }
 
-        .table-container {
-          margin: 10px;
-          border-radius: 12px;
-        }
-
-        .btn-add {
-          width: 100%;
-          justify-content: center;
-        }
-
-        .btn-action {
-          padding: 6px 10px;
-          margin-right: 4px;
-        }
-
-        .modal-body {
-          padding: 20px;
-        }
-
-        .form-control {
-          font-size: 16px; /* Prevents zoom on iOS */
-        }
-      }
-
-      /* ===== ANIMATIONS ===== */
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .fade-in {
-        animation: fadeIn 0.3s ease;
-      }
-
-      /* Section Title Enhancement */
-      .section-title h3 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-weight: 700;
-        font-size: 2.5rem;
-      }
+      .spinner-border-sm { width: 1.2rem; height: 1.2rem; }
     </style>
   </head>
   <body>
-    <!-- ========================= preloader start ========================= -->
-    <div class="preloader">
-      <div class="loader">
-        <div class="spinner">
-          <div class="spinner-container">
-            <div class="spinner-rotator">
-              <div class="spinner-left">
-                <div class="spinner-circle"></div>
-              </div>
-              <div class="spinner-right">
-                <div class="spinner-circle"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- ========================= preloader end ========================= -->
+    <!-- Preloader -->
+    <div class="preloader"><div class="loader"><div class="spinner"><div class="spinner-container"><div class="spinner-rotator"><div class="spinner-left"><div class="spinner-circle"></div></div><div class="spinner-right"><div class="spinner-circle"></div></div></div></div></div></div></div>
 
-    <!-- ========================= header-6 start ========================= -->
+    <!-- Header -->
     <header class="header header-6">
       <div class="navbar-area">
         <div class="container">
@@ -514,26 +97,14 @@
                 <a class="navbar-brand" href="{% url 'frontend_home' %}">
                   <img src="{% static 'frontend/assets/img/logo/logo.svg' %}" alt="Logo" />
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent6" aria-controls="navbarSupportedContent6" aria-expanded="false" aria-label="Toggle navigation">
-                  <span class="toggler-icon"></span>
-                  <span class="toggler-icon"></span>
-                  <span class="toggler-icon"></span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent6">
+                  <span class="toggler-icon"></span><span class="toggler-icon"></span><span class="toggler-icon"></span>
                 </button>
-
-                <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent6">
-                  <ul id="nav6" class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                      <a class="page-scroll" href="{% url 'frontend_home' %}#home">Home</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="page-scroll active" href="#feature">Summarizer</a>
-                    </li>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent6">
+                  <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="page-scroll" href="{% url 'frontend_home' %}#home">Home</a></li>
+                    <li class="nav-item"><a class="page-scroll active"  href="{% url 'summarizer_list' %}#summarizer_list">Summarizer</a></li>
                   </ul>
-                </div>
-                
-                <div class="header-action d-flex">
-                  <a href="#0"> <i class="lni lni-cart"></i> </a>
-                  <a href="#0"> <i class="lni lni-alarm"></i> </a>
                 </div>
               </nav>
             </div>
@@ -541,70 +112,115 @@
         </div>
       </div>
     </header>
-    <!-- ========================= header-6 end ========================= -->
 
-    <!-- ========================= feature style-5 start ========================= -->
+    <!-- Main Section -->
     <section id="feature" class="feature-section feature-style-5 py-5">
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-xxl-10 col-xl-12 col-lg-12 col-md-12">
+          <div class="col-xxl-10 col-xl-12">
             <div class="section-title text-center mb-4">
               <h3 class="mb-15">Summarizer</h3>
-              <p class="wow fadeInUp" data-wow-delay=".4s">Gérez vos résumés d'aide émotionnelle et de résolution de problèmes.</p>
+              <p>Gérez vos résumés d'aide émotionnelle.</p>
             </div>
           </div>
         </div>
 
         <div class="row">
           <div class="col-12">
-            <a href="{% url 'summarizer_create' %}" class="btn btn-add mb-3">
-              <i class="lni lni-plus"></i>
-              <span>Ajouter Summarizer</span>
-            </a>
-            
+            <!-- TOP BAR : ADD + FILTRES SUR LA MÊME LIGNE -->
+            <div class="top-bar">
+              <a href="{% url 'summarizer_create' %}" class="btn btn-add">
+                <i class="lni lni-plus"></i> Ajouter
+              </a>
+
+              <div class="filter-group">
+                <select id="filter-month" class="form-select form-select-sm">
+                  <option value="">Mois</option>
+                  <option value="01">Janvier</option>
+                  <option value="02">Février</option>
+                  <option value="03">Mars</option>
+                  <option value="04">Avril</option>
+                  <option value="05">Mai</option>
+                  <option value="06">Juin</option>
+                  <option value="07">Juillet</option>
+                  <option value="08">Août</option>
+                  <option value="09">Septembre</option>
+                  <option value="10">Octobre</option>
+                  <option value="11">Novembre</option>
+                  <option value="12">Décembre</option>
+                </select>
+
+                <select id="filter-year" class="form-select form-select-sm">
+                  <option value="">Années</option>
+                  <option value="2025">2025</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                </select>
+              </div>
+            </div>
+
             <div class="table-container fade-in">
-              <table class="table table-hover mb-0">
+              <table class="table table-hover mb-0" id="summarizer-table">
                 <thead>
                   <tr>
-                    <th><i class="lni lni-bookmark me-2"></i>Titre</th>
-                    <th><i class="lni lni-pencil me-2"></i>Entrée Utilisateur</th>
-                    <th><i class="lni lni-text me-2"></i>Résumé</th>
-                    <th><i class="lni lni-calendar me-2"></i>Créé le</th>
-                    <th><i class="lni lni-cog me-2"></i>Actions</th>
+                    <th>Titre</th>
+                    <th>Entrée</th>
+                    <th>Résumé</th>
+                    <th>Créé le</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for summarizer in summarizers %}
-                    <tr>
-                      <td class="truncated" title="{{ summarizer.title }}">
-                        <strong>{{ summarizer.title }}</strong>
-                      </td>
-                      <td class="truncated" title="{{ summarizer.user_input }}">
-                        {{ summarizer.user_input|truncatewords:10 }}
-                      </td>
-                      <td class="truncated" title="{{ summarizer.summary|default:'(Vide)' }}">
+                    <tr data-month="{{ summarizer.created_at|date:'m' }}" data-year="{{ summarizer.created_at|date:'Y' }}">
+                      <td class="truncated" title="{{ summarizer.title }}"><strong>{{ summarizer.title }}</strong></td>
+                      <td class="truncated" title="{{ summarizer.user_input }}">{{ summarizer.user_input|truncatewords:10 }}</td>
+
+                      <td class="truncated summary-cell" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#summaryModal" 
+                          data-title="{{ summarizer.title }}" 
+                          data-summary="{{ summarizer.summary|default:'(Aucun résumé)'|linebreaksbr }}">
                         {{ summarizer.summary|truncatewords:10|default:"(Vide)" }}
                       </td>
+
                       <td>{{ summarizer.created_at|date:"d/m/Y H:i" }}</td>
-                      <td>
+
+                      <!-- ACTIONS ALIGNÉES SUR LA MÊME LIGNE -->
+                      <td class="actions-cell">
+                        <!-- Modifier -->
                         <a href="{% url 'summarizer_update' summarizer.pk %}" class="btn-action btn-warning" title="Modifier">
                           <i class="lni lni-pencil"></i>
                         </a>
+
+                        <!-- Supprimer -->
                         <form method="post" action="{% url 'summarizer_delete' summarizer.pk %}" style="display: inline;" class="delete-form">
                           {% csrf_token %}
                           <button type="button" class="btn-action btn-danger delete-btn" title="Supprimer">
                             <i class="lni lni-trash"></i>
                           </button>
                         </form>
+
+                        <!-- Trouver solution (Groq IA) -->
+                        <form method="post" action="{% url 'summarizer_generate' summarizer.pk %}" style="display: inline;" class="d-inline">
+                          {% csrf_token %}
+                          <button type="submit" 
+                                  class="btn btn-success position-relative d-flex align-items-center gap-2 px-3 py-2" 
+                                  style="border-radius: 8px; font-size: 0.875rem; min-width: 130px; justify-content: center;" 
+                                  title="Trouver une solution avec Groq IA">
+                            <span class="button-text">Trouver solution</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                          </button>
+                        </form>
                       </td>
                     </tr>
                   {% empty %}
                     <tr>
-                      <td colspan="5">
+                      <td colspan="5" class="text-center py-5">
                         <div class="empty-state">
                           <i class="lni lni-empty-file"></i>
-                          <h5>Aucun summarizer trouvé</h5>
-                          <p>Cliquez sur "Ajouter Summarizer" pour commencer à créer vos résumés.</p>
+                          <h5>Aucun summarizer</h5>
+                          <p>Cliquez sur "Ajouter" pour commencer.</p>
                         </div>
                       </td>
                     </tr>
@@ -616,76 +232,117 @@
         </div>
       </div>
     </section>
-    <!-- ========================= feature style-5 end ========================= -->
 
-    <!-- Modal pour Suppression -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+    <!-- MODALS -->
+    <!-- Summary Modal -->
+    <div class="modal fade" id="summaryModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="deleteModalLabel">
-              <i class="lni lni-trash"></i>
-              <span>Confirmer la suppression</span>
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title"><i class="lni lni-bulb"></i> <span id="modalTitle">Résumé</span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <p>Êtes-vous sûr de vouloir supprimer ce summarizer ? Cette action est irréversible.</p>
+            <pre id="modalSummary" class="m-0">Chargement...</pre>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="lni lni-close me-2"></i>Annuler
-            </button>
-            <button type="button" class="btn btn-danger" id="confirmDelete">
-              <i class="lni lni-trash me-2"></i>Supprimer
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ========================= JS here ========================= -->
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="lni lni-trash"></i> Confirmer</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Supprimer ce summarizer ?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS -->
     <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
-    <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>
-    <script src="{% static 'frontend/assets/js/wow.min.js' %}"></script>
     <script src="{% static 'frontend/assets/js/main.js' %}"></script>
 
     <script>
-      // CSRF Token Helper
+      // CSRF Token
       function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-            }
-          }
-        }
-        return cookieValue;
+        let v = null;
+        document.cookie.split(';').forEach(c => {
+          const [k, val] = c.trim().split('=');
+          if (k === name) v = decodeURIComponent(val);
+        });
+        return v;
       }
-
       const csrftoken = getCookie('csrftoken');
 
-      // Delete Confirmation Modal
+      // === SUPPRESSION : Modal + Submit ===
       let deleteForm = null;
-      document.addEventListener('click', function(event) {
-        const button = event.target.closest('.delete-btn');
-        if (button) {
-          event.preventDefault();
-          deleteForm = button.closest('form');
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.delete-btn');
+        if (btn) {
+          e.preventDefault();
+          deleteForm = btn.closest('form');
           const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
           modal.show();
         }
       });
 
-      document.getElementById('confirmDelete').addEventListener('click', function() {
+      document.getElementById('confirmDelete').addEventListener('click', () => {
         if (deleteForm) {
           deleteForm.submit();
         }
       });
+
+      // === MODAL RÉSUMÉ ===
+      document.querySelectorAll('.summary-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          document.getElementById('modalTitle').textContent = cell.dataset.title;
+          document.getElementById('modalSummary').textContent = cell.dataset.summary.replace(/<br\s*\/?>/gi, '\n');
+        });
+      });
+
+      // === SPINNER POUR "TROUVER SOLUTION" UNIQUEMENT ===
+      document.querySelectorAll('form[action*="generate"] button').forEach(btn => {
+        const form = btn.closest('form');
+        form.addEventListener('submit', () => {
+          const text = btn.querySelector('.button-text');
+          const spinner = btn.querySelector('.spinner-border');
+          if (text) text.classList.add('d-none');
+          if (spinner) spinner.classList.remove('d-none');
+          btn.disabled = true;
+        });
+      });
+
+      // === FILTRES MOIS/ANNÉE ===
+      const table = document.getElementById('summarizer-table');
+      const rows = table.querySelectorAll('tbody tr[data-month]');
+
+      function applyFilters() {
+        const month = document.getElementById('filter-month').value;
+        const year = document.getElementById('filter-year').value;
+
+        rows.forEach(row => {
+          const rowMonth = row.dataset.month;
+          const rowYear = row.dataset.year;
+          const show = (!month || rowMonth === month) && (!year || rowYear === year);
+          row.style.display = show ? '' : 'none';
+        });
+      }
+
+      document.getElementById('filter-month').addEventListener('change', applyFilters);
+      document.getElementById('filter-year').addEventListener('change', applyFilters);
     </script>
   </body>
 </html>
