@@ -400,6 +400,26 @@
                             </div>
                           </div>
                           <div class="card-body">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                              <form method="get" action="" class="form-inline">
+                                <div class="input-group mr-2 mb-2">
+                                  <input type="text" class="form-control" name="q" placeholder="Rechercher (nom, email)" value="{{ q }}">
+                                  <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                                  </div>
+                                </div>
+                                <div class="form-group mb-2">
+                                  <label class="mr-2">Trier</label>
+                                  <select name="order" class="form-control" onchange="this.form.submit()">
+                                    <option value="-date" {% if order == '-date' %}selected{% endif %}>Plus récent d'abord</option>
+                                    <option value="date" {% if order == 'date' %}selected{% endif %}>Plus ancien d'abord</option>
+                                  </select>
+                                </div>
+                                {% if q %}
+                                <a href="?order={{ order }}" class="btn btn-link mb-2 ml-2">Effacer</a>
+                                {% endif %}
+                              </form>
+                            </div>
                             <div class="table-responsive">
                               <table class="table table-bordered" width="100%" cellspacing="0">
                                 <thead>
@@ -441,7 +461,7 @@
                                   </tr>
                                   {% empty %}
                                   <tr>
-                                    <td colspan="6" class="text-center text-muted">Aucun utilisateur.</td>
+                                    <td colspan="7" class="text-center text-muted">Aucun utilisateur.</td>
                                   </tr>
                                   {% endfor %}
                                 </tbody>

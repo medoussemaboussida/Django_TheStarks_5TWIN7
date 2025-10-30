@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models.functions import TruncMonth
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 import json
 import json
@@ -230,8 +230,19 @@ def admin_dashboard(request):
                 messages.error(request, "La génération du PDF nécessite la bibliothèque 'reportlab'. Exécutez: pip install reportlab")
                 return redirect('admin_dashboard')
 
+    # Filtering and sorting for users table (GET only)
+    search_q = request.GET.get('q', '').strip()
+    order_key = request.GET.get('order', '-date')
+    order_by = '-date_joined' if order_key == '-date' else 'date_joined'
+    users_list = users
+    if search_q:
+        users_list = users_list.filter(Q(username__icontains=search_q) | Q(email__icontains=search_q))
+    users_list = users_list.order_by(order_by)
+
     ctx = {
-        'users': users,
+        'users': users_list,
+        'q': search_q,
+        'order': order_key,
     }
     ctx.update(chart_ctx)
     return render(request, 'admin/index.html', ctx)
