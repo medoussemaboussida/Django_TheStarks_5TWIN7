@@ -154,7 +154,6 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-<<<<<<< HEAD
 # Media files (user uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -163,12 +162,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/journal/'
 
-=======
 # Media (uploaded files)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
->>>>>>> 32e919597a09c2a6a6116d190cf312aa28ac158d
 # reCAPTCHA configuration
 # For local development, set your keys directly here (DO NOT commit real prod keys)
 # In production, prefer: RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '')
