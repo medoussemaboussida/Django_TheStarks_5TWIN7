@@ -69,7 +69,7 @@
                         <a class="page-scroll active" href="#home">Home</a>
                       </li>
                       <li class="nav-item">
-                        <a class="page-scroll" href="#feature">Feature</a>
+                        <a class="page-scroll" href="#feature">Summarizer</a>
                       </li>
                       <li class="nav-item">
                         <a class="page-scroll" href="#about">About</a>
@@ -87,6 +87,10 @@
                   <div class="header-action d-flex">
                     <a href="#0"> <i class="lni lni-cart"></i> </a>
                     <a href="#0"> <i class="lni lni-alarm"></i> </a>
+                    {% if request.user.is_authenticated %}
+                    <a href="{% url 'profile' %}" title="Mon profil"> <i class="lni lni-user"></i> </a>
+                    <a href="{% url 'logout' %}" title="Logout"> <i class="lni lni-exit"></i> </a>
+                    {% endif %}
                   </div>
                   <!-- navbar collapse -->
                 </nav>
@@ -132,98 +136,14 @@
         <div class="row justify-content-center">
           <div class="col-xxl-5 col-xl-5 col-lg-7 col-md-8">
             <div class="section-title text-center mb-60">
-              <h3 class="mb-15 wow fadeInUp" data-wow-delay=".2s">Specializing In</h3>
-              <p class="wow fadeInUp" data-wow-delay=".4s">Stop wasting time and money designing and managing a website that doesn’t get results. Happiness guaranteed!</p>
-            </div>
+              <h3 class="mb-15 wow fadeInUp" data-wow-delay=".2s">Let's talk</h3>&nbsp;&nbsp;&nbsp;
+       <div class="row justify-content-center">
+          <div class="col-12 text-center">
+            <a href="{% url 'summarizer_list' %}" class="button button-lg radius-50">Go to Summarizer</a>
           </div>
         </div>
-
-        <div class="row">
-          <div class="col-lg-4 col-md-6">
-            <div class="single-feature wow fadeInUp" data-wow-delay=".2s">
-              <div class="icon">
-                <i class="lni lni-vector"></i>
-                <svg width="110" height="72" viewBox="0 0 110 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M110 54.7589C110 85.0014 85.3757 66.2583 55 66.2583C24.6243 66.2583 0 85.0014 0 54.7589C0 24.5164 24.6243 0 55 0C85.3757 0 110 24.5164 110 54.7589Z" fill="#EBF4FF"/>
-                  </svg>                  
-              </div>
-              <div class="content">
-                <h5>Graphics Design</h5>
-                <p>Short description for the ones who look for something new.</p>
-              </div>
             </div>
           </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="single-feature wow fadeInUp" data-wow-delay=".4s">
-              <div class="icon">
-                <i class="lni lni-pallet"></i>
-                <svg width="110" height="72" viewBox="0 0 110 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M110 54.7589C110 85.0014 85.3757 66.2583 55 66.2583C24.6243 66.2583 0 85.0014 0 54.7589C0 24.5164 24.6243 0 55 0C85.3757 0 110 24.5164 110 54.7589Z" fill="#EBF4FF"/>
-                  </svg> 
-              </div>
-              <div class="content">
-                <h5>Print Design</h5>
-                <p>Short description for the ones who look for something new.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="single-feature wow fadeInUp" data-wow-delay=".6s">
-              <div class="icon">
-                <i class="lni lni-stats-up"></i>
-                <svg width="110" height="72" viewBox="0 0 110 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M110 54.7589C110 85.0014 85.3757 66.2583 55 66.2583C24.6243 66.2583 0 85.0014 0 54.7589C0 24.5164 24.6243 0 55 0C85.3757 0 110 24.5164 110 54.7589Z" fill="#EBF4FF"/>
-                  </svg> 
-              </div>
-              <div class="content">
-                <h5>Business Analysis</h5>
-                <p>Short description for the ones who look for something new.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="single-feature wow fadeInUp" data-wow-delay=".2s">
-              <div class="icon">
-                <i class="lni lni-code-alt"></i>
-                <svg width="110" height="72" viewBox="0 0 110 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M110 54.7589C110 85.0014 85.3757 66.2583 55 66.2583C24.6243 66.2583 0 85.0014 0 54.7589C0 24.5164 24.6243 0 55 0C85.3757 0 110 24.5164 110 54.7589Z" fill="#EBF4FF"/>
-                  </svg> 
-              </div>
-              <div class="content">
-                <h5>Web Development</h5>
-                <p>Short description for the ones who look for something new.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="single-feature wow fadeInUp" data-wow-delay=".4s">
-              <div class="icon">
-                <i class="lni lni-lock"></i>
-                <svg width="110" height="72" viewBox="0 0 110 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M110 54.7589C110 85.0014 85.3757 66.2583 55 66.2583C24.6243 66.2583 0 85.0014 0 54.7589C0 24.5164 24.6243 0 55 0C85.3757 0 110 24.5164 110 54.7589Z" fill="#EBF4FF"/>
-                  </svg> 
-              </div>
-              <div class="content">
-                <h5>Best Security</h5>
-                <p>Short description for the ones who look for something new.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="single-feature wow fadeInUp" data-wow-delay=".6s">
-              <div class="icon">
-                <i class="lni lni-code"></i>
-                <svg width="110" height="72" viewBox="0 0 110 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M110 54.7589C110 85.0014 85.3757 66.2583 55 66.2583C24.6243 66.2583 0 85.0014 0 54.7589C0 24.5164 24.6243 0 55 0C85.3757 0 110 24.5164 110 54.7589Z" fill="#EBF4FF"/>
-                  </svg> 
-              </div>
-              <div class="content">
-                <h5>Web Design</h5>
-                <p>Short description for the ones who look for something new.</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
       </div>
     </section>

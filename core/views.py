@@ -3,8 +3,13 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
+import re
+from datetime import datetime, date
 from .forms import SignupForm, EmailAuthForm
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 import json
 import urllib.parse
 import urllib.request
@@ -74,3 +79,108 @@ def register_view(request):
 def logout_view(request):
     logout(request)
     return redirect('root')
+
+def profile_view(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    profile = getattr(request.user, 'profile', None)
+    if request.method == 'POST':
+        errors = {}
+        full_name = request.POST.get('full_name', '').strip()
+        username = request.POST.get('username', '').strip()
+        birth_date = request.POST.get('birth_date', '').strip()
+
+        if username and username != request.user.username:
+            # pattern: letters, numbers, dot, underscore, dash; length 3..30
+            if not re.fullmatch(r'[A-Za-z0-9._-]{3,30}', username):
+                errors['username'] = "Nom d’utilisateur invalide (3-30 caractères, lettres/chiffres . _ -)."
+            if User.objects.filter(username__iexact=username).exclude(pk=request.user.pk).exists():
+                errors['username'] = "Ce nom d’utilisateur est déjà pris."
+            if 'username' not in errors:
+                request.user.username = username
+
+        # Full name is not editable per user's request; ignore any value
+
+        if birth_date:
+            try:
+                d = datetime.strptime(birth_date, '%Y-%m-%d').date()
+                if d < date(1900, 1, 1) or d > date.today():
+                    errors['birth_date'] = "La date de naissance doit être entre 1900-01-01 et aujourd’hui."
+                if profile is None:
+                    from .models import Profile
+                    profile = Profile.objects.create(user=request.user, birth_date=d)
+                else:
+                    profile.birth_date = d
+            except Exception:
+                errors['birth_date'] = "Date de naissance invalide (format YYYY-MM-DD)."
+        # if there are any errors, render template with errors and keep inputs visible
+        if errors:
+            return render(request, 'frontend/profile.html', {'profile': profile, 'errors': errors})
+
+        request.user.save()
+        if profile is not None:
+            profile.save()
+        messages.success(request, 'Profil mis à jour avec succès.')
+        return redirect('profile')
+
+    # GET request: render the profile page
+    return render(request, 'frontend/profile.html', {'profile': profile})
+def change_password(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.method != 'POST':
+        messages.error(request, 'Action non autorisée.')
+        return redirect('profile')
+
+    current_password = request.POST.get('current_password', '')
+    new_password = request.POST.get('new_password', '')
+    confirm_password = request.POST.get('confirm_password', '')
+
+    field_errors = {}
+    # Verify current password
+    if not request.user.check_password(current_password):
+        field_errors['current_password'] = 'Mot de passe actuel incorrect.'
+
+    # New vs confirm
+    if new_password != confirm_password:
+        field_errors['confirm_password'] = 'La confirmation ne correspond pas.'
+
+    # Strength/validators
+    if not field_errors:
+        try:
+            validate_password(new_password, user=request.user)
+        except ValidationError as ve:
+            field_errors['new_password'] = ' '.join(ve.messages)
+
+    if field_errors:
+        # Re-render profile with errors and keep change password modal open via flag
+        profile = getattr(request.user, 'profile', None)
+        return render(request, 'frontend/profile.html', {
+            'profile': profile,
+            'pw_errors': field_errors,
+            'open_change_password': True,
+        })
+
+    # All good: set password
+    request.user.set_password(new_password)
+    request.user.save()
+    messages.success(request, 'Mot de passe modifié avec succès. Connectez-vous à nouveau.')
+    return redirect('login')
+
+    return render(request, 'frontend/profile.html', {'profile': profile})
+
+def delete_account(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.method == 'POST':
+        user = request.user
+        logout(request)
+        try:
+            user.delete()
+            messages.success(request, "Votre compte a été supprimé.")
+        except Exception:
+            messages.error(request, "Impossible de supprimer le compte pour le moment.")
+        return redirect('login')
+    # Forbid GET deletion; just redirect back to profile
+    messages.error(request, "Action non autorisée.")
+    return redirect('profile')

@@ -12,9 +12,18 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+try:
+    from dotenv import load_dotenv
+except ImportError:  # package optional; app still runs without it
+    load_dotenv = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env file from project root (if present and python-dotenv installed)
+# override=True ensures .env takes precedence over previously-set shell env vars
+if load_dotenv is not None:
+    load_dotenv(BASE_DIR / '.env', override=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -40,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'journal',
+    'summarizer',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +58,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middleware.LoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -118,6 +129,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
@@ -142,3 +155,29 @@ RECAPTCHA_SECRET_KEY = '6LeUJvsrAAAAAJoxEn8b99KQ22tgv949nkW-PB1g'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GEMINI_API_KEY = "AIzaSyC4UvQMFbqvLLmYQhq5dqXnn7RgVfhmOM4"
+
+# Email
+# Default to console backend for development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'no-reply@localhost'
+
+# If SMTP is enabled via environment, configure it (e.g., Gmail)
+MAILTRAP_API_TOKEN = os.getenv('MAILTRAP_API_TOKEN') or os.getenv('EMAIL_HOST_PASSWORD') if os.getenv('EMAIL_HOST_USER') == 'api' else None
+MAILTRAP_API_URL = os.getenv('MAILTRAP_API_URL', 'https://send.api.mailtrap.io/api/send')
+
+if MAILTRAP_API_TOKEN:
+    # Use custom Mailtrap HTTP API backend
+    EMAIL_BACKEND = 'core.email_backends.MailtrapAPIEmailBackend'
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Mailtrap Test <hello@demomailtrap.co>')
+    MAILTRAP_API_TOKEN = MAILTRAP_API_TOKEN
+    MAILTRAP_API_URL = MAILTRAP_API_URL
+elif os.getenv('SMTP_ENABLED', '0') == '1':
+    # Fallback to SMTP if explicitly enabled
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', '1') == '1'
+    EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', '0') == '1'
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@localhost')
