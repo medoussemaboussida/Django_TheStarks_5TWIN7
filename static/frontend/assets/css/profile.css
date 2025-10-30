@@ -1,0 +1,91 @@
+/* Profile page custom styles to match Lindy/Frontend theme */
+html, body { height: 100%; }
+.profile-hero { padding-top: 0; margin-bottom: 0; }
+.profile-hero .header-6 { position: relative; z-index: 5; margin-bottom: 0; }
+/* Apply the home background across the entire page */
+.profile-page {
+  background-color: #f5f9ff;
+  background-image: url('/static/frontend/assets/img/hero/hero-5/hero-bg.svg');
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: cover;
+  background-attachment: fixed; /* ensure it spans full height while scrolling */
+  min-height: 100vh;
+}
+/* Make header/nav transparent on the profile page so background is visible */
+.profile-page .navbar-area { background: transparent !important; box-shadow: none !important; }
+.profile-page .header-6 { background: transparent; }
+.profile-page .hero-section-wrapper-5 { background: transparent; }
+/* Keep hero wrapper compact without its own background to avoid double layer */
+.profile-hero-bg { padding: 16px 0 24px 0; }
+/* Bring profile content closer and overlap onto hero */
+.profile-section { padding-top: 0; padding-bottom: 64px; margin-top: -140px; position: relative; z-index: 6; }
+/* Ensure profile card overlaps hero */
+.profile-card {
+  margin-top: -40px;
+  position: relative;
+  z-index: 2;
+}
+/* Make sure modals are above any hero/navbar overlays */
+.modal { z-index: 1060 !important; }
+.modal-backdrop { z-index: 1050 !important; }
+/* Reduce the built-in hero vertical spacing from the Lindy kit on this page */
+.profile-hero .hero-section.hero-style-5 { padding-top: 0; padding-bottom: 10px; }
+.profile-hero-bg { padding: 4px 0 8px 0; }
+.profile-hero .hero-content-wrapper h2 { margin: 0; line-height: 1.2; }
+
+.profile-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); max-width: 860px; margin: 0 auto; }
+.profile-header { gap: 18px; border-bottom: 1px solid #eef2f7; padding-bottom: 16px; }
+.profile-header .info { display: flex; flex-direction: column; justify-content: center; }
+.profile-header .name { font-size: 32px; font-weight: 800; color: #0f172a; }
+.profile-header .chips { margin-top: 6px; }
+.profile-header .chip { background: #f1f5ff; border: 1px solid #e2e8ff; color: #4154f1; }
+.profile-header .avatar-wrap{ position: relative; display: inline-block; }
+.profile-header .avatar-wrap::after{
+  content: "";
+  position: absolute; inset: -6px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(67,97,238,0.25), rgba(67,97,238,0));
+  z-index: 0;
+}
+.profile-header .avatar {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
+  position: relative; z-index: 1;
+}
+.profile-header .avatar-edit-btn{
+  position: absolute;
+  right: 6px; bottom: 6px;
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  border: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #3b82f6; color: #fff;
+  box-shadow: 0 6px 16px rgba(59,130,246,0.35);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  z-index: 2;
+}
+.profile-header .avatar-edit-btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 24px rgba(59,130,246,0.45); }
+.profile-header .avatar-edit-btn:active{ transform: translateY(0); }
+.profile-header .info h4 { font-weight: 700; margin-bottom: 4px; }
+.profile-header .info .muted { color: #6c7a91; font-size: 14px; }
+
+.info-item { background: #f8fbff; border: 1px solid #e6eefc; border-radius: 12px; padding: 14px 16px; height: 100%; }
+.info-item .label { display: block; color: #6c7a91; font-size: 13px; margin-bottom: 6px; }
+.info-item .value { font-weight: 600; font-size: 16px; color: #1d263a; }
+
+.actions .button { display: inline-flex; align-items: center; gap: 8px; }
+.actions .button.outline { background: transparent; border: 1px solid #d7e2ff; color: #1d263a; }
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  .profile-header { flex-direction: column; align-items: flex-start; }
+  .profile-header .avatar { width: 120px; height: 120px; }
+}
+@media (max-width: 992px) {
+  .profile-section { margin-top: -90px; padding-bottom: 48px; }
+}

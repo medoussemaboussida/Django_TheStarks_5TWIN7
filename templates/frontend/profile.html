@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{% static 'frontend/assets/css/tiny-slider.css' %}"/>
     <link rel="stylesheet" href="{% static 'frontend/assets/css/animate.css' %}"/>
     <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}"/>
-    <link rel="stylesheet" href="{% static 'frontend/assets/css/profile.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/profile.css' %}?v={% now 'U' %}"/>
   </head>
   <body class="profile-page">
 
@@ -402,6 +402,20 @@
           });
         }
       })();
+    </script>
+    <script>
+      // Cleanup any lingering Bootstrap backdrops/classes after closing the modal
+      document.addEventListener('DOMContentLoaded', function(){
+        var cpModal = document.getElementById('changePasswordModal');
+        if(!cpModal) return;
+        cpModal.addEventListener('hidden.bs.modal', function(){
+          document.body.classList.remove('modal-open');
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('paddingRight');
+          var backs = document.querySelectorAll('.modal-backdrop');
+          backs.forEach(function(b){ if(b && b.parentNode){ b.parentNode.removeChild(b); } });
+        });
+      });
     </script>
   </body>
 </html>
