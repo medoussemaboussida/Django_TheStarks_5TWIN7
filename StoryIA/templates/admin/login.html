@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>SB Admin 2 - Login</title>
+
+    <!-- Custom fonts for this template-->
+    {% load static %}
+    <link href="{% static 'admin/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="{% static 'admin/css/sb-admin-2.min.css' %}" rel="stylesheet">
+    <!-- New modern auth CSS (reuse for login) -->
+    <link href="{% static 'admin/css/register-custom.css' %}" rel="stylesheet">
+
+</head>
+
+<body class="custom-auth-bg">
+
+    <div class="auth-wrapper">
+      <div class="auth-visual">
+        <div class="auth-visual-inner"></div>
+      </div>
+      <div class="auth-card">
+        <div class="brand">
+          <div class="brand-badge"><i class="fas fa-lock"></i></div>
+          <div>
+            <div class="subtitle">Welcome back</div>
+            <div class="title">Sign in to your account Story'IA</div>
+          </div>
+        </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" class="user" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="form-grid">
+            <div class="full input-with-icon">
+              <label class="visually-hidden" for="id_email">Email Address</label>
+              {{ form.email }}
+              <i class="far fa-envelope field-icon"></i>
+              {% if form.email.errors %}
+                <div class="text-danger small" id="err-email">{{ form.email.errors|striptags }}</div>
+              {% endif %}
+            </div>
+            <div class="full input-with-icon">
+              <label class="visually-hidden" for="id_password">Password</label>
+              {{ form.password }}
+              <i class="fas fa-lock field-icon"></i>
+              {% if form.password.errors %}
+                <div class="text-danger small" id="err-password">{{ form.password.errors|striptags }}</div>
+              {% endif %}
+              <button type="button" class="toggle-pass" data-target="id_password">Afficher/Masquer le mot de passe</button>
+            </div>
+            {% if recaptcha_site_key %}
+            <div class="full">
+              <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+              <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+            </div>
+            {% endif %}
+            <div class="full">
+              <button id="login-submit" type="submit" class="btn btn-primary btn-user btn-block">Sign in</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="hr-text">Don't have an account?</div>
+        <div class="small-links">
+          <div class="small"><a href="{% url 'register' %}">Create an account</a></div>
+          <div class="small"><a href="{% url 'password_reset' %}">Forgot password?</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optional JS -->
+    <script src="{% static 'admin/vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'admin/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'admin/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+    <script src="{% static 'admin/js/sb-admin-2.min.js' %}"></script>
+    <script>
+      (function(){
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-pass').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-target');
+            const field = document.getElementById(id);
+            if (!field) return;
+            field.type = field.type === 'password' ? 'text' : 'password';
+          });
+        });
+
+        // Submit loading state
+        const form = document.querySelector('form.user');
+        const submitBtn = document.getElementById('login-submit');
+        if (form && submitBtn) {
+          form.addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing…';
+          });
+        }
+
+        // Add aria attrs where errors exist
+        const pairs = [
+          ['id_email','err-email'],
+          ['id_password','err-password']
+        ];
+        pairs.forEach(([fid,eid])=>{
+          const field = document.getElementById(fid);
+          const err = document.getElementById(eid);
+          if (field && err) {
+            field.setAttribute('aria-invalid','true');
+            field.setAttribute('aria-describedby', eid);
+          }
+        });
+
+        // Scroll to first error
+        const firstErr = document.querySelector('.text-danger');
+        if (firstErr) {
+          firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+      })();
+    </script>
+
+</body>
+
+</html>

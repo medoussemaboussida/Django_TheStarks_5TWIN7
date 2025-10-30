@@ -1,0 +1,421 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Mon Profil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Styles identiques à la home -->
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/tiny-slider.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/animate.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/profile.css' %}?v={% now 'U' %}"/>
+  </head>
+  <body class="profile-page">
+
+    <!-- Header/nav identique -->
+    <section class="hero-section-wrapper-5 profile-hero">
+      <header class="header header-6">
+        <div class="navbar-area">
+          <div class="container">
+            <div class="row align-items-center">
+              <div class="col-lg-12">
+                <nav class="navbar navbar-expand-lg">
+                              <a class="navbar-brand" href="{% url 'frontend_home' %}">
+                     <a class="navbar-brand" href="{% url 'frontend_home' %}" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 28px; color: #0088cc; text-decoration: none;">Strory'IA</a>
+                </a>
+                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent6" aria-controls="navbarSupportedContent6" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                  </button>
+
+                  <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent6">
+                    <ul id="nav6" class="navbar-nav ms-auto">
+                      <li class="nav-item">
+                        <a class="page-scroll" href="/">Home</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="page-scroll" href="/profile/">Profil</a>
+                      </li>
+                    </ul>
+                  <div class="header-action d-flex">
+                    {% if request.user.is_authenticated %}
+                      <a href="{% url 'profile' %}" title="Mon profil"> <i class="lni lni-user"></i> </a>
+                      <a href="{% url 'logout' %}" title="Logout"> <i class="lni lni-exit"></i> </a>
+                    {% else %}
+                      <a href="{% url 'login' %}">Se connecter</a>
+                    {% endif %}
+                  </div>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Bandeau titre -->
+      <div class="hero-section hero-style-5 img-bg profile-hero-bg">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <div class="hero-content-wrapper">
+                <h2 class="mb-10 wow fadeInUp" data-wow-delay=".2s">Mon Profil</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Corps de page profil -->
+    <section class="profile-section pt-60 pb-80">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-xl-8 col-lg-9">
+            <div class="profile-card shadow-sm wow fadeInUp" data-wow-delay=".2s">
+              <div class="profile-header d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                  <div class="avatar-wrap">
+                    <img src="{% if profile and profile.photo %}{{ profile.photo.url }}{% else %}{% static 'admin/img/undraw_profile.svg' %}{% endif %}" alt="avatar" class="avatar rounded-circle" id="avatar_img">
+                    <input type="file" class="d-none" id="input_photo" name="photo" accept="image/*" form="profile_form">
+                    <button type="button" class="avatar-edit-btn" id="btn_change_photo" title="Changer la photo" aria-label="Changer la photo">
+                      <i class="lni lni-camera"></i>
+                    </button>
+                  </div>
+                  <div class="info ms-3">
+                    <div class="d-flex align-items-center gap-10">
+                      <h3 class="name mb-0" id="display_full_name">{{ request.user.get_full_name|default:request.user.username }}</h3>
+                    </div>
+                    <div class="chips mt-5">
+                      <span class="chip"><i class="lni lni-calendar"></i> Inscrit le {{ request.user.date_joined|date:'Y-m-d H:i' }}</span>
+                      <span class="chip"><i class="lni lni-timer"></i> Dernière connexion {{ request.user.last_login|date:'Y-m-d H:i'|default:'—' }}</span>
+                    </div>
+                    {% if errors.photo %}
+                      <div class="text-danger small mt-2" id="photo_error">{{ errors.photo }}</div>
+                    {% else %}
+                      <div class="text-danger small mt-2 d-none" id="photo_error"></div>
+                    {% endif %}
+                  </div>
+                </div>
+                <!-- header actions removed; buttons moved near Change Password -->
+              </div>
+
+              <form method="post" id="profile_form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <h5 class="section-title mt-25">Mes informations</h5>
+                <div class="info-grid mt-15">
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-user"></i></div>
+                    <div class="content">
+                      <div class="label">Nom d'utilisateur</div>
+                      <div class="value" id="display_username">{{ request.user.username }}</div>
+                      <input type="text" class="form-control d-none" id="input_username" name="username" value="{{ request.user.username }}" placeholder="Nom d'utilisateur" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" title="3-30 caractères: lettres, chiffres, . _ -">
+                      <div class="invalid-feedback">3-30 caractères autorisés: lettres, chiffres, point, underscore, tiret.</div>
+                      {% if errors.username %}
+                        <div class="text-danger small mt-1">{{ errors.username }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-envelope"></i></div>
+                    <div class="content">
+                      <div class="label">Email</div>
+                      <div class="value">{{ request.user.email }}</div>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-calendar"></i></div>
+                    <div class="content">
+                      <div class="label">Date de naissance</div>
+                      <div class="value" id="display_birth">{{ profile.birth_date|date:'Y-m-d'|default:'—' }}</div>
+                      <input type="date" class="form-control d-none" id="input_birth" name="birth_date" value="{{ profile.birth_date|date:'Y-m-d' }}" min="1900-01-01">
+                      <div class="invalid-feedback">Choisis une date valide (≥ 1900-01-01 et ≤ aujourd’hui).</div>
+                      {% if errors.birth_date %}
+                        <div class="text-danger small mt-1">{{ errors.birth_date }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <div class="icon"><i class="lni lni-shield"></i></div>
+                    <div class="content">
+                      <div class="label">Rôle</div>
+                      <div class="value">{% if request.user.is_superuser %}Administrateur{% elif request.user.is_staff %}Staff{% else %}Utilisateur{% endif %}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="actions mt-25 d-flex gap-2 flex-wrap">
+                  <button type="button" class="button radius-30" id="btn_change_pw" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="lni lni-lock"></i> Changer le mot de passe</button>
+                  <button type="button" class="button radius-30" id="btn_edit"><i class="lni lni-pencil"></i> Modifier</button>
+                  <button type="submit" class="button radius-30 d-none" id="btn_save"><i class="lni lni-checkmark"></i> Enregistrer</button>
+                  <button type="button" class="button radius-30" style="background:#ef4444;border-color:#ef4444;color:#fff" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                    <i class="lni lni-trash-can"></i> Supprimer le compte
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <a href="#" class="scroll-top"> <i class="lni lni-chevron-up"></i> </a>
+
+    <!-- Delete Account Modal -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteAccountModalLabel">Confirmer la suppression</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">Cette action est <strong>définitive</strong>. Votre compte et vos données seront supprimés.</p>
+            <p class="mb-0">Voulez-vous vraiment supprimer votre compte ?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <form method="post" action="{% url 'delete_account' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="changePasswordModalLabel">Changer le mot de passe</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="post" action="{% url 'change_password' %}" id="changePasswordForm">
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Mot de passe actuel</label>
+                <input type="password" name="current_password" id="cp_current" class="form-control {% if pw_errors.current_password %}is-invalid{% endif %}" required>
+                {% if pw_errors.current_password %}
+                  <div class="invalid-feedback">{{ pw_errors.current_password }}</div>
+                {% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nouveau mot de passe</label>
+                <input type="password" name="new_password" id="cp_new" class="form-control {% if pw_errors.new_password %}is-invalid{% endif %}" minlength="8" required>
+                <div class="progress mt-2" style="height: 6px;">
+                  <div class="progress-bar" id="pw_strength_bar" role="progressbar" style="width:0%"></div>
+                </div>
+                <div class="form-text" id="pw_strength_text"></div>
+                {% if pw_errors.new_password %}
+                  <div class="invalid-feedback d-block">{{ pw_errors.new_password }}</div>
+                {% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Confirmer le nouveau mot de passe</label>
+                <input type="password" name="confirm_password" id="cp_confirm" class="form-control {% if pw_errors.confirm_password %}is-invalid{% endif %}" required>
+                {% if pw_errors.confirm_password %}
+                  <div class="invalid-feedback">{{ pw_errors.confirm_password }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/wow.min.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/main.js' %}"></script>
+    <script>
+      (function(){
+        const btnEdit = document.getElementById('btn_edit');
+        const btnSave = document.getElementById('btn_save');
+        const btnCancel = document.getElementById('btn_cancel');
+        // Full name stays read-only
+        const displayUser = document.getElementById('display_username');
+        const inputUser = document.getElementById('input_username');
+        const displayBirth = document.getElementById('display_birth');
+        const inputBirth = document.getElementById('input_birth');
+        const form = document.getElementById('profile_form');
+
+        function enterEdit(){
+          // show inputs
+          inputUser.classList.remove('d-none');
+          inputBirth.classList.remove('d-none');
+          // hide displays
+          displayUser.classList.add('d-none');
+          displayBirth.classList.add('d-none');
+          // buttons
+          btnEdit.classList.add('d-none');
+          btnSave.classList.remove('d-none');
+          btnCancel.classList.remove('d-none');
+        }
+        function exitEdit(cancel){
+          if(cancel){
+            inputUser.value = displayUser.textContent.trim();
+            // birth date: keep original value attr already set server-side
+          }
+          inputUser.classList.add('d-none');
+          inputBirth.classList.add('d-none');
+          displayUser.classList.remove('d-none');
+          displayBirth.classList.remove('d-none');
+          btnEdit.classList.remove('d-none');
+          btnSave.classList.add('d-none');
+          btnCancel.classList.add('d-none');
+          // clear client validation styles
+          inputUser.classList.remove('is-invalid');
+          inputBirth.classList.remove('is-invalid');
+        }
+        if(btnEdit){ btnEdit.addEventListener('click', enterEdit); }
+        if(btnCancel){ btnCancel.addEventListener('click', function(){ exitEdit(true); }); }
+        // Auto-enter edit mode if server returned errors
+        {% if errors %}
+          enterEdit();
+        {% endif %}
+
+        // Client-side validation on input
+        function validateUsername(){
+          if(inputUser.classList.contains('d-none')) return true;
+          const ok = /^[A-Za-z0-9._-]{3,30}$/.test(inputUser.value);
+          inputUser.classList.toggle('is-invalid', !ok);
+          return ok;
+        }
+        function validateBirth(){
+          if(inputBirth.classList.contains('d-none')) return true;
+          const v = inputBirth.value;
+          if(!v){ inputBirth.classList.remove('is-invalid'); return true; }
+          const d = new Date(v);
+          const min = new Date('1900-01-01');
+          const today = new Date();
+          const ok = d >= min && d <= today;
+          inputBirth.classList.toggle('is-invalid', !ok);
+          return ok;
+        }
+        if(inputUser){ inputUser.addEventListener('input', validateUsername); }
+        if(inputBirth){ inputBirth.addEventListener('change', validateBirth); }
+        if(form){
+          form.addEventListener('submit', function(e){
+            const okU = validateUsername();
+            const okB = validateBirth();
+            if(!(okU && okB)){
+              e.preventDefault();
+            }
+          });
+        }
+
+        // Photo upload: open picker, validate, preview
+        const btnChangePhoto = document.getElementById('btn_change_photo');
+        const inputPhoto = document.getElementById('input_photo');
+        const avatarImg = document.getElementById('avatar_img');
+        const photoError = document.getElementById('photo_error');
+        if(btnChangePhoto && inputPhoto){
+          btnChangePhoto.addEventListener('click', function(){ inputPhoto.click(); });
+          inputPhoto.addEventListener('change', function(){
+            if(!inputPhoto.files || !inputPhoto.files[0]) return;
+            const f = inputPhoto.files[0];
+            const isImage = f.type && f.type.startsWith('image/');
+            const okSize = f.size <= 2 * 1024 * 1024;
+            let msg = '';
+            if(!isImage){ msg = 'Le fichier doit être une image.'; }
+            else if(!okSize){ msg = 'L’image est trop volumineuse (max 2 Mo).'; }
+            if(msg){
+              if(photoError){ photoError.textContent = msg; photoError.classList.remove('d-none'); }
+              inputPhoto.value = '';
+              return;
+            }
+            if(photoError){ photoError.textContent = ''; photoError.classList.add('d-none'); }
+            if(avatarImg){
+              const url = URL.createObjectURL(f);
+              avatarImg.src = url;
+            }
+            // Auto-submit to persist the new avatar
+            const pf = document.getElementById('profile_form');
+            if(pf){ pf.submit(); }
+          });
+        }
+
+        // Password strength meter
+        const newPw = document.getElementById('cp_new');
+        const confirmPw = document.getElementById('cp_confirm');
+        const bar = document.getElementById('pw_strength_bar');
+        const txt = document.getElementById('pw_strength_text');
+        function scorePassword(p){
+          let s = 0;
+          if(!p) return 0;
+          if(p.length >= 8) s += 25;
+          if(/[A-Z]/.test(p)) s += 20;
+          if(/[a-z]/.test(p)) s += 15;
+          if(/\d/.test(p)) s += 20;
+          if(/[^A-Za-z0-9]/.test(p)) s += 20;
+          if(p.length >= 12) s += 10;
+          return Math.min(s, 100);
+        }
+        function renderStrength(){
+          if(!bar || !txt) return;
+          const s = scorePassword(newPw.value);
+          bar.style.width = s + '%';
+          let cls = 'bg-danger', label = 'Faible';
+          if(s >= 75){ cls = 'bg-success'; label = 'Fort'; }
+          else if(s >= 50){ cls = 'bg-warning'; label = 'Moyen'; }
+          bar.className = 'progress-bar ' + cls;
+          txt.textContent = 'Robustesse: ' + label;
+          // confirm match inline
+          if(confirmPw){
+            const match = !confirmPw.value || confirmPw.value === newPw.value;
+            confirmPw.classList.toggle('is-invalid', !match);
+          }
+        }
+        if(newPw){ newPw.addEventListener('input', renderStrength); }
+        if(confirmPw){ confirmPw.addEventListener('input', renderStrength); }
+
+        // Auto-open change password modal if server flagged errors
+        {% if open_change_password %}
+          const pwModalEl = document.getElementById('changePasswordModal');
+          if(pwModalEl){
+            var pwModal = new bootstrap.Modal(pwModalEl);
+            pwModal.show();
+          }
+        {% endif %}
+
+        // Fallback: open modal via JS on click
+        const btnChangePw = document.getElementById('btn_change_pw');
+        if(btnChangePw){
+          btnChangePw.addEventListener('click', function(){
+            const el = document.getElementById('changePasswordModal');
+            if(el && window.bootstrap){
+              var m = new bootstrap.Modal(el);
+              m.show();
+            }
+          });
+        }
+      })();
+    </script>
+    <script>
+      // Cleanup any lingering Bootstrap backdrops/classes after closing the modal
+      document.addEventListener('DOMContentLoaded', function(){
+        var cpModal = document.getElementById('changePasswordModal');
+        if(!cpModal) return;
+        cpModal.addEventListener('hidden.bs.modal', function(){
+          document.body.classList.remove('modal-open');
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('paddingRight');
+          var backs = document.querySelectorAll('.modal-backdrop');
+          backs.forEach(function(b){ if(b && b.parentNode){ b.parentNode.removeChild(b); } });
+        });
+      });
+    </script>
+  </body>
+</html>

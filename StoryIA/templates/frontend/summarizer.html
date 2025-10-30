@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html class="no-js" lang="">
+{% load static %}
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Story'IA - Summarizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/animate.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}"/>
+    
+    <style>
+      :root { --primary-color: #007bff; --success-color: #28a745; }
+      body { background-color: #f8f9fa; font-family: system-ui; }
+
+      .table-container { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; margin-top: 24px; }
+      .table thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+      .table th { color: white; font-weight: 600; text-transform: uppercase; font-size: 0.813rem; }
+      .table td { vertical-align: middle; padding: 16px; }
+      .table-hover tbody tr:hover { background-color: #f7fafc; transform: scale(1.01); }
+
+      .truncated { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+      .truncated:hover { color: #667eea; text-decoration: underline; }
+
+      .btn-add { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; border-radius: 50px; }
+      
+      /* BOUTONS = MÊME TAILLE & ALIGNÉS */
+      .actions-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+      }
+      .btn-action {
+        width: 36px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: none;
+      }
+      .btn-action:hover { transform: translateY(-2px); }
+
+      .btn-success { background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; }
+      .btn-warning { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #212529; }
+      .btn-danger { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
+
+      /* FILTRES SUR LA MÊME LIGNE */
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .filter-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .form-select-sm {
+        font-size: 0.875rem;
+        padding: 6px 12px;
+        border-radius: 8px;
+        min-width: 120px;
+      }
+
+      .modal-content { border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+      .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+      .modal-title { font-weight: 700; font-size: 1.5rem; display: flex; align-items: center; gap: 12px; }
+      .modal-body { padding: 32px; background-color: #fafbfc; font-size: 1rem; line-height: 1.7; }
+      .modal-body pre { background: #f1f3f5; padding: 16px; border-radius: 12px; white-space: pre-wrap; font-family: inherit; }
+
+      .spinner-border-sm { width: 1.2rem; height: 1.2rem; }
+    </style>
+  </head>
+  <body>
+    <!-- Preloader -->
+    <div class="preloader"><div class="loader"><div class="spinner"><div class="spinner-container"><div class="spinner-rotator"><div class="spinner-left"><div class="spinner-circle"></div></div><div class="spinner-right"><div class="spinner-circle"></div></div></div></div></div></div></div>
+
+    <!-- Header -->
+    <header class="header header-6">
+      <div class="navbar-area">
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-lg-12">
+              <nav class="navbar navbar-expand-lg">
+                <a class="navbar-brand" href="{% url 'frontend_home' %}">
+                     <a class="navbar-brand" href="{% url 'frontend_home' %}" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 28px; color: #0088cc; text-decoration: none;">Strory'IA</a>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent6">
+                  <span class="toggler-icon"></span><span class="toggler-icon"></span><span class="toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent6">
+                  <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="page-scroll" href="{% url 'frontend_home' %}#home">Home</a></li>
+                    <li class="nav-item"><a class="page-scroll active"  href="{% url 'summarizer_list' %}#summarizer_list">solver</a></li>
+                  </ul>
+                </div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Section -->
+    <section id="feature" class="feature-section feature-style-5 py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-xxl-10 col-xl-12">
+            <div class="section-title text-center mb-4">
+              <h3 class="mb-15">solver</h3>
+              <p>Gérez vos résumés d'aide émotionnelle.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <!-- TOP BAR : ADD + FILTRES SUR LA MÊME LIGNE -->
+            <div class="top-bar">
+              <a href="{% url 'summarizer_create' %}" class="btn btn-add">
+                <i class="lni lni-plus"></i> Ajouter
+              </a>
+
+              <div class="filter-group">
+                <select id="filter-month" class="form-select form-select-sm">
+                  <option value="">Mois</option>
+                  <option value="01">Janvier</option>
+                  <option value="02">Février</option>
+                  <option value="03">Mars</option>
+                  <option value="04">Avril</option>
+                  <option value="05">Mai</option>
+                  <option value="06">Juin</option>
+                  <option value="07">Juillet</option>
+                  <option value="08">Août</option>
+                  <option value="09">Septembre</option>
+                  <option value="10">Octobre</option>
+                  <option value="11">Novembre</option>
+                  <option value="12">Décembre</option>
+                </select>
+
+                <select id="filter-year" class="form-select form-select-sm">
+                  <option value="">Années</option>
+                  <option value="2025">2025</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-container fade-in">
+              <table class="table table-hover mb-0" id="summarizer-table">
+                <thead>
+                  <tr>
+                    <th>Titre</th>
+                    <th>Entrée</th>
+                    <th>Résumé</th>
+                    <th>Créé le</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for summarizer in summarizers %}
+                    <tr data-month="{{ summarizer.created_at|date:'m' }}" data-year="{{ summarizer.created_at|date:'Y' }}">
+                      <td class="truncated" title="{{ summarizer.title }}"><strong>{{ summarizer.title }}</strong></td>
+                      <td class="truncated" title="{{ summarizer.user_input }}">{{ summarizer.user_input|truncatewords:10 }}</td>
+
+                      <td class="truncated summary-cell" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#summaryModal" 
+                          data-title="{{ summarizer.title }}" 
+                          data-summary="{{ summarizer.summary|default:'(Aucun résumé)'|linebreaksbr }}">
+                        {{ summarizer.summary|truncatewords:10|default:"(Vide)" }}
+                      </td>
+
+                      <td>{{ summarizer.created_at|date:"d/m/Y H:i" }}</td>
+
+                      <!-- ACTIONS ALIGNÉES SUR LA MÊME LIGNE -->
+                      <td class="actions-cell">
+                        <!-- Modifier -->
+                        <a href="{% url 'summarizer_update' summarizer.pk %}" class="btn-action btn-warning" title="Modifier">
+                          <i class="lni lni-pencil"></i>
+                        </a>
+
+                        <!-- Supprimer -->
+                        <form method="post" action="{% url 'summarizer_delete' summarizer.pk %}" style="display: inline;" class="delete-form">
+                          {% csrf_token %}
+                          <button type="button" class="btn-action btn-danger delete-btn" title="Supprimer">
+                            <i class="lni lni-trash"></i>
+                          </button>
+                        </form>
+
+                        <!-- Trouver solution (Groq IA) -->
+                        <form method="post" action="{% url 'summarizer_generate' summarizer.pk %}" style="display: inline;" class="d-inline">
+                          {% csrf_token %}
+                          <button type="submit" 
+                                  class="btn btn-success position-relative d-flex align-items-center gap-2 px-3 py-2" 
+                                  style="border-radius: 8px; font-size: 0.875rem; min-width: 130px; justify-content: center;" 
+                                  title="Trouver une solution avec Groq IA">
+                            <span class="button-text">Trouver solution</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="5" class="text-center py-5">
+                        <div class="empty-state">
+                          <i class="lni lni-empty-file"></i>
+                          <h5>Aucun solver.</h5>
+                          <p>Cliquez sur "Ajouter" pour commencer.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODALS -->
+    <!-- Summary Modal -->
+    <div class="modal fade" id="summaryModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="lni lni-bulb"></i> <span id="modalTitle">Résumé</span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <pre id="modalSummary" class="m-0">Chargement...</pre>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="lni lni-trash"></i> Confirmer</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Supprimer ?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS -->
+    <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/main.js' %}"></script>
+
+    <script>
+      // CSRF Token
+      function getCookie(name) {
+        let v = null;
+        document.cookie.split(';').forEach(c => {
+          const [k, val] = c.trim().split('=');
+          if (k === name) v = decodeURIComponent(val);
+        });
+        return v;
+      }
+      const csrftoken = getCookie('csrftoken');
+
+      // === SUPPRESSION : Modal + Submit ===
+      let deleteForm = null;
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.delete-btn');
+        if (btn) {
+          e.preventDefault();
+          deleteForm = btn.closest('form');
+          const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+          modal.show();
+        }
+      });
+
+      document.getElementById('confirmDelete').addEventListener('click', () => {
+        if (deleteForm) {
+          deleteForm.submit();
+        }
+      });
+
+      // === MODAL RÉSUMÉ ===
+      document.querySelectorAll('.summary-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          document.getElementById('modalTitle').textContent = cell.dataset.title;
+          document.getElementById('modalSummary').textContent = cell.dataset.summary.replace(/<br\s*\/?>/gi, '\n');
+        });
+      });
+
+      // === SPINNER POUR "TROUVER SOLUTION" UNIQUEMENT ===
+      document.querySelectorAll('form[action*="generate"] button').forEach(btn => {
+        const form = btn.closest('form');
+        form.addEventListener('submit', () => {
+          const text = btn.querySelector('.button-text');
+          const spinner = btn.querySelector('.spinner-border');
+          if (text) text.classList.add('d-none');
+          if (spinner) spinner.classList.remove('d-none');
+          btn.disabled = true;
+        });
+      });
+
+      // === FILTRES MOIS/ANNÉE ===
+      const table = document.getElementById('summarizer-table');
+      const rows = table.querySelectorAll('tbody tr[data-month]');
+
+      function applyFilters() {
+        const month = document.getElementById('filter-month').value;
+        const year = document.getElementById('filter-year').value;
+
+        rows.forEach(row => {
+          const rowMonth = row.dataset.month;
+          const rowYear = row.dataset.year;
+          const show = (!month || rowMonth === month) && (!year || rowYear === year);
+          row.style.display = show ? '' : 'none';
+        });
+      }
+
+      document.getElementById('filter-month').addEventListener('change', applyFilters);
+      document.getElementById('filter-year').addEventListener('change', applyFilters);
+    </script>
+  </body>
+</html>
