@@ -33,6 +33,8 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('admin-template/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-template/reclamations/', views.reclamations, name='reclamations'),
+    path('api/reclamations/submit/', views.submit_reclamation, name='submit_reclamation'),
     path('summarizer/', include('summarizer.urls')),  # Ajout ici pour inclure les URLs de l'app summarizer
     path('api/grok-chat/', views.grok_chat, name='grok_chat'),
     # Password reset

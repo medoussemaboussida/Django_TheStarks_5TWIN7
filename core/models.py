@@ -10,6 +10,18 @@ class Profile(models.Model):
     def __str__(self):
         return f"Profile({self.user.username})"
 
-from django.db import models
 
-# Create your models here.
+class Reclamation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reclamations')
+    name = models.CharField(max_length=80)
+    number = models.CharField(max_length=32)
+    subject = models.CharField(max_length=120)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        base = self.subject or 'Réclamation'
+        return f"{base} ({self.name})"

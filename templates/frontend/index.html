@@ -263,37 +263,35 @@
         <div class="row">
           <div class="col-lg-8">
             <div class="contact-form-wrapper">
-              <form action="assets/php/contact.php" method="POST">
+              <form id="contactForm" novalidate>
                 <div class="row">
                   <div class="col-md-6">
                     <div class="single-input">
                       <input type="text" id="name" name="name" class="form-input" placeholder="Name">
                       <i class="lni lni-user"></i>
                     </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="single-input">
-                      <input type="email" id="email" name="email" class="form-input" placeholder="Email">
-                      <i class="lni lni-envelope"></i>
-                    </div>
+                    <div class="small text-danger" data-error-for="name"></div>
                   </div>
                   <div class="col-md-6">
                     <div class="single-input">
                       <input type="text" id="number" name="number" class="form-input" placeholder="Number">
                       <i class="lni lni-phone"></i>
                     </div>
+                    <div class="small text-danger" data-error-for="number"></div>
                   </div>
                   <div class="col-md-6">
                     <div class="single-input">
                       <input type="text" id="subject" name="subject" class="form-input" placeholder="Subject">
                       <i class="lni lni-text-format"></i>
                     </div>
+                    <div class="small text-danger" data-error-for="subject"></div>
                   </div>
                   <div class="col-md-12">
                     <div class="single-input">
                       <textarea name="message" id="message" class="form-input" placeholder="Message" rows="6"></textarea>
                       <i class="lni lni-comments-alt"></i>
                     </div>
+                    <div class="small text-danger" data-error-for="message"></div>
                   </div>
                   <div class="col-md-12">
                     <div class="form-button">
@@ -444,6 +442,120 @@
     <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>
     <script src="{% static 'frontend/assets/js/wow.min.js' %}"></script>
     <script src="{% static 'frontend/assets/js/main.js' %}"></script>
+    <script>
+      (function(){
+        const form = document.getElementById('contactForm');
+        if(!form) return;
+        const successId = 'contactSuccessMsg';
+        const errorId = 'contactErrorMsg';
+        const fields = ['name','number','subject','message'];
+
+        function getCsrfToken(){
+          const name = 'csrftoken=';
+          const decoded = decodeURIComponent(document.cookie || '');
+          const parts = decoded.split(';');
+          for(let part of parts){
+            part = part.trim();
+            if(part.startsWith(name)){
+              return part.substring(name.length);
+            }
+          }
+          return '';
+        }
+
+        function removeMessages(){
+          const ok = document.getElementById(successId);
+          if(ok) ok.remove();
+          const err = document.getElementById(errorId);
+          if(err) err.remove();
+        }
+
+        function setError(fieldId, msg){
+          const err = form.querySelector('[data-error-for="'+fieldId+'"]');
+          const input = form.querySelector('#'+fieldId);
+          if(err){ err.textContent = msg || ''; }
+          if(input){
+            if(msg){ input.classList.add('is-invalid'); }
+            else { input.classList.remove('is-invalid'); }
+          }
+        }
+
+        function clearFieldErrors(){
+          fields.forEach(f=>setError(f,''));
+        }
+
+        async function submitForm(payload){
+          const response = await fetch('{% url "submit_reclamation" %}',{
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(payload)
+          });
+          const data = await response.json().catch(()=>({}));
+          if(!response.ok){
+            throw { status: response.status, data };
+          }
+          return data;
+        }
+
+        form.addEventListener('submit', async function(e){
+          e.preventDefault();
+          removeMessages();
+          clearFieldErrors();
+
+          const values = {
+            name: form.name.value.trim(),
+            number: form.number.value.trim(),
+            subject: form.subject.value.trim(),
+            message: form.message.value.trim()
+          };
+
+          let valid = true;
+          if(values.name.length < 2 || values.name.length > 50 || /[^A-Za-zÀ-ÿ'\-\s]/.test(values.name)){
+            setError('name','Nom requis (2-50 caractères, lettres et espaces).');
+            valid = false;
+          }
+          if(!/^\+?[0-9\s\-]{6,20}$/.test(values.number)){
+            setError('number','Numéro invalide (6-20 chiffres, peut contenir +, espace, -).');
+            valid = false;
+          }
+          if(values.subject.length < 2 || values.subject.length > 100){
+            setError('subject','Sujet requis (2-100 caractères).');
+            valid = false;
+          }
+          if(values.message.length < 10 || values.message.length > 1000){
+            setError('message','Message requis (10-1000 caractères).');
+            valid = false;
+          }
+          if(!valid){ return; }
+
+          form.querySelector('button[type="submit"]').disabled = true;
+
+          try{
+            const result = await submitForm(values);
+            const ok = document.createElement('div');
+            ok.id = successId;
+            ok.className = 'alert alert-success mt-3';
+            ok.textContent = 'Merci ! Votre message a été envoyé.';
+            form.appendChild(ok);
+            form.reset();
+          }catch(err){
+            if(err && err.data && err.data.errors){
+              Object.entries(err.data.errors).forEach(([field,msg])=>setError(field, msg));
+            }
+            const fail = document.createElement('div');
+            fail.id = errorId;
+            fail.className = 'alert alert-danger mt-3';
+            fail.textContent = 'Une erreur est survenue. Merci de réessayer.';
+            form.appendChild(fail);
+          }finally{
+            form.querySelector('button[type="submit"]').disabled = false;
+          }
+        });
+      })();
+    </script>
     <style>
       .grok-chat-toggle{position:fixed;right:20px;bottom:20px;z-index:9999;border-radius:999px;background:#0ea5e9;color:#fff;border:0;padding:12px 16px;box-shadow:0 10px 20px rgba(14,165,233,.35);display:flex;align-items:center;gap:8px}
       .grok-chat-panel{position:fixed;right:20px;bottom:80px;width:360px;max-width:90vw;height:480px;display:none;flex-direction:column;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.15);z-index:10000;overflow:hidden}

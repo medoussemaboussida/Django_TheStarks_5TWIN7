@@ -18,7 +18,10 @@ import json
 import urllib.parse
 import urllib.request
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.http import JsonResponse
+
+from .models import Reclamation
 
 def admin_dashboard(request):
     if not request.user.is_authenticated:
@@ -248,6 +251,53 @@ def admin_dashboard(request):
     }
     ctx.update(chart_ctx)
     return render(request, 'admin/index.html', ctx)
+
+def reclamations(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_staff:
+        messages.error(request, "Accès refusé.")
+        return redirect('root')
+    items = Reclamation.objects.select_related('user').all()
+    return render(request, 'admin/reclamations.html', {'reclamations': items})
+
+
+@require_POST
+def submit_reclamation(request):
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except Exception:
+        payload = {}
+
+    data = {
+        'name': (payload.get('name') or request.POST.get('name', '')).strip(),
+        'number': (payload.get('number') or request.POST.get('number', '')).strip(),
+        'subject': (payload.get('subject') or request.POST.get('subject', '')).strip(),
+        'message': (payload.get('message') or request.POST.get('message', '')).strip(),
+    }
+
+    errors = {}
+    if not (2 <= len(data['name']) <= 50) or re.search(r"[^A-Za-zÀ-ÿ'\-\s]", data['name']):
+        errors['name'] = "Nom invalide (2-50 caractères, lettres et espaces)."
+    if not re.fullmatch(r"\+?[0-9\s\-]{6,20}", data['number']):
+        errors['number'] = "Numéro invalide (6-20 chiffres, peut contenir +, espace, -)."
+    if not (2 <= len(data['subject']) <= 100):
+        errors['subject'] = "Sujet invalide (2-100 caractères)."
+    if not (10 <= len(data['message']) <= 1000):
+        errors['message'] = "Message invalide (10-1000 caractères)."
+
+    if errors:
+        return JsonResponse({'success': False, 'errors': errors}, status=400)
+
+    rec = Reclamation.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        name=data['name'],
+        number=data['number'],
+        subject=data['subject'],
+        message=data['message'],
+    )
+
+    return JsonResponse({'success': True, 'id': rec.id})
 
 def frontend_home(request):
     return render(request, 'frontend/index.html')
