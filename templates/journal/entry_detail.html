@@ -1,221 +1,585 @@
-{% extends "admin/index.html" %}
-{% block content %}
-<div class="container-fluid py-3">
-  <!-- Header title + actions -->
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <a class="btn btn-link p-0" href="{% url 'journal:entry_list' %}">← Retour</a>
-      <h1 class="h3 mb-0">📝 {{ entry.title }}</h1>
-      <small class="text-muted">
-        <i class="far fa-calendar mr-1"></i>{{ entry.entry_date|date:"d/m/Y" }}
-        {% if entry.time_of_day %} · <i class="far fa-clock mr-1"></i>{{ entry.get_time_of_day_display }}{% endif %}
-      </small>
-    </div>
-    <!-- <div class="btn-group">
-      <a class="btn btn-primary btn-sm" href="{% url 'journal:entry_update' entry.pk %}"><i class="fas fa-edit mr-1"></i>Modifier</a>
-      <button type="button" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#confirmDeleteModal"><i class="fas fa-trash mr-1"></i>Supprimer</button>
-    </div> -->
-  </div>
-
-  {% if rec_loading %}
-  <div class="alert alert-info mb-3">
-    Le moteur d'IA se réveille (Hugging Face). Réessaie dans quelques secondes…
-  </div>
-  {% endif %}
-
-  {% if recommendations %}
-  <div class="card shadow-sm mb-3">
-    <div class="card-header d-flex align-items-center"><i class="fas fa-brain mr-2"></i>Recommandations (basées sur cette entrée)</div>
-    <div class="card-body">
-      <ul class="list-unstyled mb-0">
-        {% for r in recommendations %}
-          <li class="mb-2">
-            <div class="d-flex align-items-center justify-content-between">
-              <strong>{{ r.label }}</strong>
-              <div class="small">
-                {% if r.category %}<span class="badge badge-light border mr-1">{{ r.category }}</span>{% endif %}
-                {% if r.duration_min %}<span class="badge badge-light border">~ {{ r.duration_min }} min</span>{% endif %}
+<!DOCTYPE html class="no-js" lang="">
+{% load static %}
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>Détail de l'entrée</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}" />
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}"/>
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/tiny-slider.css' %}"/>
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/animate.css' %}"/>
+  <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}"/>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header header-6">
+    <div class="navbar-area">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-12">
+            <nav class="navbar navbar-expand-lg">
+              <a class="navbar-brand" href="{% url 'frontend_home' %}">
+                <img src="{% static 'frontend/assets/img/logo/logo.svg' %}" alt="Logo" />
+              </a>
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent6" aria-controls="navbarSupportedContent6" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="toggler-icon"></span>
+                <span class="toggler-icon"></span>
+                <span class="toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent6">
+                <ul id="nav6" class="navbar-nav ms-auto">
+                  <li class="nav-item"><a class="page-scroll" href="#home">Home</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#feature">Summarizer</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#about">About</a></li>
+                  <li class="nav-item"><a class="page-scroll active" href="{% url 'journal:entry_list' %}">Journal</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#pricing">Pricing</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#contact">Contact</a></li>
+                </ul>
               </div>
-            </div>
-            {% if r.why %}<div class="text-muted small">{{ r.why }}</div>{% endif %}
-          </li>
-        {% endfor %}
-      </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  {% else %}
-  {% if rec_error %}
-  <div class="alert alert-warning mb-3">
-    Impossible de générer des recommandations pour le moment.
-    {% if rec_error %}<div class="small text-muted">Détail: {{ rec_error }}</div>{% endif %}
-    <div class="mt-2"><a href="" class="btn btn-sm btn-outline-primary">Rafraîchir</a></div>
-  </div>
-  {% else %}
-  <div class="alert alert-light border mb-3">Aucune recommandation pour l'instant.</div>
-  {% endif %}
-  {% endif %}
-
-  <div class="row">
-    <!-- Main column -->
-    <div class="col-lg-8">
-      {% if entry.content %}
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="far fa-file-alt mr-2"></i>Contenu</div>
-        <div class="card-body">
-          <pre class="mb-0" style="white-space:pre-wrap;">{{ entry.content }}</pre>
-        </div>
-      </div>
-      {% endif %}
-
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="far fa-smile mr-2"></i>État émotionnel & physique</div>
-        <div class="card-body">
-          <div class="mb-2">
-            {% if entry.mood %}
-              <span class="badge badge-primary mr-1"><i class="far fa-smile mr-1"></i>{{ entry.get_mood_display }}</span>
-            {% endif %}
-            {% if entry.physical_health %}
-              <span class="badge badge-light border mr-1">💪 {{ entry.get_physical_health_display }}</span>
-            {% endif %}
-          </div>
-
-          <div class="d-flex flex-column" style="gap:.5rem;">
-            {% if entry.main_mood_level %}
-            <div>
-              <span class="mr-2" title="Humeur">🙂</span>
-              {% for _ in "12345" %}<span class="badge {% if forloop.counter <= entry.main_mood_level %}badge-primary{% else %}badge-light{% endif %}">&nbsp;</span>{% endfor %}
+  </header>
+  <!-- Hero -->
+  <section class="hero-section-wrapper-5">
+    <div class="hero-section hero-style-5 img-bg" style="background-image: url('{% static "frontend/assets/img/hero/hero-5/hero-bg.svg" %}')">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-7">
+            <div class="hero-content-wrapper">
+              <h2 class="mb-30">Détail de l'entrée</h2>
+              <p class="mb-0">Consultez les informations et moments marquants.</p>
             </div>
-            {% endif %}
-            {% if entry.energy_level %}
-            <div>
-              <span class="mr-2" title="Énergie">⚡</span>
-              {% for _ in "12345" %}<span class="badge {% if forloop.counter <= entry.energy_level %}badge-info{% else %}badge-light{% endif %}">&nbsp;</span>{% endfor %}
-            </div>
-            {% endif %}
-            {% if entry.sleep_quality %}
-            <div>
-              <span class="mr-2" title="Sommeil">😴</span>
-              {% for _ in "12345" %}<span class="badge {% if forloop.counter <= entry.sleep_quality %}badge-success{% else %}badge-light{% endif %}">&nbsp;</span>{% endfor %}
-            </div>
-            {% endif %}
           </div>
         </div>
       </div>
-
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="fas fa-star mr-2"></i>Moments marquants</div>
-        <div class="card-body">
-          <ul class="mb-0" style="padding-left:1rem;">
-            {% if entry.favorite_moment %}<li><strong>Moment préféré:</strong> {{ entry.favorite_moment }}</li>{% endif %}
-            {% if entry.challenge %}<li><strong>Défi relevé:</strong> {{ entry.challenge }}</li>{% endif %}
-            {% if entry.achievement %}<li><strong>Réussite:</strong> {{ entry.achievement }}</li>{% endif %}
-            {% if entry.surprise %}<li><strong>Surprise:</strong> {{ entry.surprise }}</li>{% endif %}
-          </ul>
-        </div>
+    </div>
+  </section>
+  
+  <div class="container-fluid py-3">
+    <!-- Header title + actions -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <a class="btn btn-link p-0 text-decoration-none" href="{% url 'journal:entry_list' %}">
+          <i class="fas fa-arrow-left mr-1"></i>Retour
+        </a>
+        <h1 class="h3 mb-0 mt-2"><i class="fas fa-book-open text-primary mr-2"></i>{{ entry.title }}</h1>
+        <small class="text-muted">
+          <i class="far fa-calendar mr-1"></i>{{ entry.entry_date|date:"d/m/Y" }}
+          {% if entry.time_of_day %} · <i class="far fa-clock mr-1"></i>{{ entry.get_time_of_day_display }}{% endif %}
+        </small>
       </div>
+    
+    </div>
 
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="fas fa-bullseye mr-2"></i>Objectifs & réflexions</div>
-        <div class="card-body">
-          <ul class="mb-0" style="padding-left:1rem;">
-            {% if entry.daily_goal %}<li><strong>Objectif du jour:</strong> {{ entry.daily_goal }}</li>{% endif %}
-            {% if entry.accomplishments %}<li><strong>Accomplissements:</strong> {{ entry.accomplishments }}</li>{% endif %}
-            {% if entry.lesson_learned %}<li><strong>Leçon apprise:</strong> {{ entry.lesson_learned }}</li>{% endif %}
-            {% if entry.gratitude %}<li><strong>Gratitude:</strong><br><pre class="mb-0" style="white-space:pre-wrap;">{{ entry.gratitude }}</pre></li>{% endif %}
-          </ul>
-        </div>
+    {% if rec_loading %}
+    <div class="alert alert-info mb-3 d-flex align-items-center">
+      <i class="fas fa-sync fa-spin mr-2"></i>
+      <span>Le moteur d'IA se réveille (Hugging Face). Réessaie dans quelques secondes…</span>
+    </div>
+    {% endif %}
+
+    {% if recommendations %}
+    <div class="card shadow-sm mb-3 border-0">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fas fa-brain mr-2"></i>Recommandations (basées sur cette entrée)
       </div>
-
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="fas fa-running mr-2"></i>Bien‑être & activités</div>
-        <div class="card-body">
-          <div class="small">
-            {% if entry.physical_activity %}<span class="badge badge-success mr-1"><i class="fas fa-running mr-1"></i>{{ entry.get_physical_activity_display }}</span>{% endif %}
-            {% if entry.meditation %}<span class="badge badge-info mr-1"><i class="fas fa-spa mr-1"></i>{{ entry.get_meditation_display }}</span>{% endif %}
-            {% if entry.screen_time %}<span class="badge badge-warning mr-1"><i class="fas fa-mobile-alt mr-1"></i>{{ entry.get_screen_time_display }}</span>{% endif %}
-            {% if entry.meals_quality %}<span class="badge badge-primary mr-1"><i class="fas fa-utensils mr-1"></i>{{ entry.get_meals_quality_display }}</span>{% endif %}
-          </div>
-        </div>
-      </div>
-
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="far fa-images mr-2"></i>Médias</div>
-        <div class="card-body">
-          <div class="row">
-            {% for m in entry.media.all %}
-              <div class="col-sm-6 col-md-4 mb-3">
-                <div class="border rounded overflow-hidden" style="background:#f8f9fa;">
-                  <a href="{{ m.file.url }}" target="_blank" class="d-block" title="{{ m.caption|default:m.file.name }}">
-                    <img src="{{ m.file.url }}" alt="{{ m.caption|default:m.file.name }}" class="img-fluid" style="object-fit:cover; width:100%; height:140px;" onerror="this.style.display='none';">
-                  </a>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0">
+          {% for r in recommendations %}
+            <li class="mb-3 p-3 bg-light rounded">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <strong class="text-dark">{{ r.label }}</strong>
+                <div class="small">
+                  {% if r.category %}
+                  <span class="badge bg-secondary me-1">{{ r.category }}</span>
+                  {% endif %}
+                  {% if r.duration_min %}
+                  <span class="badge bg-light text-dark border">~ {{ r.duration_min }} min</span>
+                  {% endif %}
                 </div>
-                {% if m.caption %}<div class="small text-muted mt-1">{{ m.caption }}</div>{% endif %}
-                {% if m.media_type %}<div class="small">Type: <em>{{ m.media_type }}</em></div>{% endif %}
               </div>
-            {% empty %}
-              <div class="col-12"><div class="alert alert-light border mb-0">Aucun média</div></div>
-            {% endfor %}
-          </div>
-        </div>
+              {% if r.why %}
+              <div class="text-muted small">{{ r.why }}</div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
+    {% else %}
+    {% if rec_error %}
+    <div class="alert alert-warning mb-3">
+      <i class="fas fa-exclamation-triangle mr-2"></i>
+      Impossible de générer des recommandations pour le moment.
+      {% if rec_error %}
+      <div class="small text-muted mt-1">Détail: {{ rec_error }}</div>
+      {% endif %}
+      <div class="mt-2">
+        <a href="" class="btn btn-sm btn-outline-primary">
+          <i class="fas fa-redo mr-1"></i>Rafraîchir
+        </a>
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-light border mb-3">
+      <i class="fas fa-info-circle mr-2"></i>Aucune recommandation pour l'instant.
+    </div>
+    {% endif %}
+    {% endif %}
 
-    <!-- Sidebar -->
-    <div class="col-lg-4">
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="fas fa-info-circle mr-2"></i>Contexte</div>
-        <div class="card-body">
-          <div class="mb-2 small">
-            {% if entry.location %}<span class="badge badge-light border mr-1">📍 {{ entry.get_location_display }}</span>{% endif %}
-            {% if entry.weather %}<span class="badge badge-light border mr-1">☁️ {{ entry.get_weather_display }}</span>{% endif %}
-            {% if entry.season %}<span class="badge badge-light border mr-1">🗓️ {{ entry.get_season_display }}</span>{% endif %}
+    <div class="row">
+      <!-- Main column -->
+      <div class="col-lg-8">
+        {% if entry.content %}
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="far fa-file-alt text-primary mr-2"></i>Contenu
           </div>
-          {% if entry.main_subject %}
-            <div class="mb-2"><i class="fas fa-compass mr-1 text-secondary"></i><strong>Sujet:</strong> {{ entry.main_subject }}</div>
-          {% endif %}
-          {% if entry.secondary_themes %}
-            <div class="text-muted"><i class="fas fa-tags mr-1"></i>{{ entry.secondary_themes }}</div>
-          {% endif %}
+          <div class="card-body">
+            <div class="journal-content" style="white-space: pre-wrap; line-height: 1.6;">{{ entry.content }}</div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="far fa-smile text-primary mr-2"></i>État émotionnel & physique
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              {% if entry.mood %}
+                <span class="badge bg-primary me-1">
+                  <i class="far fa-smile me-1"></i>{{ entry.get_mood_display }}
+                </span>
+              {% endif %}
+              {% if entry.physical_health %}
+                <span class="badge bg-success me-1">
+                  <i class="fas fa-heartbeat me-1"></i>{{ entry.get_physical_health_display }}
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="d-flex flex-column gap-3">
+              {% if entry.main_mood_level %}
+              <div class="d-flex align-items-center">
+                <span class="me-3 text-warning" title="Humeur" style="min-width: 30px;">
+                  <i class="fas fa-smile fa-lg"></i>
+                </span>
+                <div class="d-flex gap-1 flex-grow-1">
+                  {% for i in "12345" %}
+                  <div class="indicator-dot {% if forloop.counter <= entry.main_mood_level %}active{% endif %}"></div>
+                  {% endfor %}
+                </div>
+                <span class="text-muted small ms-2">{{ entry.main_mood_level }}/5</span>
+              </div>
+              {% endif %}
+              
+              {% if entry.energy_level %}
+              <div class="d-flex align-items-center">
+                <span class="me-3 text-success" title="Énergie" style="min-width: 30px;">
+                  <i class="fas fa-bolt fa-lg"></i>
+                </span>
+                <div class="d-flex gap-1 flex-grow-1">
+                  {% for i in "12345" %}
+                  <div class="indicator-dot {% if forloop.counter <= entry.energy_level %}active{% endif %}"></div>
+                  {% endfor %}
+                </div>
+                <span class="text-muted small ms-2">{{ entry.energy_level }}/5</span>
+              </div>
+              {% endif %}
+              
+              {% if entry.sleep_quality %}
+              <div class="d-flex align-items-center">
+                <span class="me-3 text-info" title="Sommeil" style="min-width: 30px;">
+                  <i class="fas fa-bed fa-lg"></i>
+                </span>
+                <div class="d-flex gap-1 flex-grow-1">
+                  {% for i in "12345" %}
+                  <div class="indicator-dot {% if forloop.counter <= entry.sleep_quality %}active{% endif %}"></div>
+                  {% endfor %}
+                </div>
+                <span class="text-muted small ms-2">{{ entry.sleep_quality }}/5</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="fas fa-star text-primary mr-2"></i>Moments marquants
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              {% if entry.favorite_moment %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-heart text-danger mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Moment préféré</strong>
+                    <span class="text-muted">{{ entry.favorite_moment }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.challenge %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-mountain text-warning mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Défi relevé</strong>
+                    <span class="text-muted">{{ entry.challenge }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.achievement %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-trophy text-success mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Réussite</strong>
+                    <span class="text-muted">{{ entry.achievement }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.surprise %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-gift text-info mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Surprise</strong>
+                    <span class="text-muted">{{ entry.surprise }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="fas fa-bullseye text-primary mr-2"></i>Objectifs & réflexions
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              {% if entry.daily_goal %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-flag text-primary mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Objectif du jour</strong>
+                    <span class="text-muted">{{ entry.daily_goal }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.accomplishments %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-check-circle text-success mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Accomplissements</strong>
+                    <span class="text-muted">{{ entry.accomplishments }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.lesson_learned %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-graduation-cap text-warning mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Leçon apprise</strong>
+                    <span class="text-muted">{{ entry.lesson_learned }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.gratitude %}
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-hands-helping text-info mt-1 me-2"></i>
+                  <div>
+                    <strong class="d-block text-dark">Gratitude</strong>
+                    <div class="text-muted" style="white-space: pre-wrap;">{{ entry.gratitude }}</div>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="fas fa-running text-primary mr-2"></i>Bien‑être & activités
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              {% if entry.physical_activity %}
+              <div class="col-md-6">
+                <div class="d-flex align-items-center p-2 bg-success bg-opacity-10 rounded">
+                  <i class="fas fa-running text-success me-2"></i>
+                  <div>
+                    <div class="small text-muted">Activité physique</div>
+                    <strong class="text-dark">{{ entry.get_physical_activity_display }}</strong>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.meditation %}
+              <div class="col-md-6">
+                <div class="d-flex align-items-center p-2 bg-info bg-opacity-10 rounded">
+                  <i class="fas fa-spa text-info me-2"></i>
+                  <div>
+                    <div class="small text-muted">Méditation</div>
+                    <strong class="text-dark">{{ entry.get_meditation_display }}</strong>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.screen_time %}
+              <div class="col-md-6">
+                <div class="d-flex align-items-center p-2 bg-warning bg-opacity-10 rounded">
+                  <i class="fas fa-mobile-alt text-warning me-2"></i>
+                  <div>
+                    <div class="small text-muted">Temps d'écran</div>
+                    <strong class="text-dark">{{ entry.get_screen_time_display }}</strong>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.meals_quality %}
+              <div class="col-md-6">
+                <div class="d-flex align-items-center p-2 bg-primary bg-opacity-10 rounded">
+                  <i class="fas fa-utensils text-primary me-2"></i>
+                  <div>
+                    <div class="small text-muted">Qualité des repas</div>
+                    <strong class="text-dark">{{ entry.get_meals_quality_display }}</strong>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="far fa-images text-primary mr-2"></i>Médias
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% for m in entry.media.all %}
+                <div class="col-sm-6 col-md-4 mb-3">
+                  <div class="border rounded overflow-hidden bg-light">
+                    <a href="{{ m.file.url }}" target="_blank" class="d-block text-decoration-none" title="{{ m.caption|default:m.file.name }}">
+                      <img src="{{ m.file.url }}" alt="{{ m.caption|default:m.file.name }}" class="img-fluid w-100" style="height: 140px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="d-none align-items-center justify-content-center bg-secondary bg-opacity-10" style="height: 140px;">
+                        <i class="fas fa-file-image fa-2x text-muted"></i>
+                      </div>
+                    </a>
+                  </div>
+                  {% if m.caption %}
+                  <div class="small text-muted mt-1">{{ m.caption }}</div>
+                  {% endif %}
+                  {% if m.media_type %}
+                  <div class="small text-muted">Type: {{ m.media_type }}</div>
+                  {% endif %}
+                </div>
+              {% empty %}
+                <div class="col-12">
+                  <div class="alert alert-light border text-center py-4">
+                    <i class="far fa-images fa-2x text-muted mb-2 d-block"></i>
+                    <span class="text-muted">Aucun média</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex align-items-center"><i class="fas fa-hashtag mr-2"></i>Tags</div>
-        <div class="card-body">
-          {% with tgs=entry.tags.all %}
-            {% if tgs %}
-              <div>
-                {% for t in tgs %}
-                  <span class="badge badge-light" style="border:1px solid #e2e8f0; border-radius:999px; padding:.35rem .6rem; margin:.1rem;">#{{ t.name }}</span>
-                {% endfor %}
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="fas fa-info-circle text-primary mr-2"></i>Contexte
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              {% if entry.location %}
+              <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                <div>
+                  <div class="small text-muted">Lieu</div>
+                  <strong class="text-dark">{{ entry.get_location_display }}</strong>
+                </div>
               </div>
-            {% else %}
-              <div class="text-muted">Aucun tag</div>
+              {% endif %}
+              
+              {% if entry.weather %}
+              <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-cloud text-info me-2"></i>
+                <div>
+                  <div class="small text-muted">Météo</div>
+                  <strong class="text-dark">{{ entry.get_weather_display }}</strong>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if entry.season %}
+              <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-leaf text-success me-2"></i>
+                <div>
+                  <div class="small text-muted">Saison</div>
+                  <strong class="text-dark">{{ entry.get_season_display }}</strong>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+            
+            {% if entry.main_subject %}
+            <div class="mb-2">
+              <i class="fas fa-compass text-secondary me-1"></i>
+              <strong class="text-dark">Sujet principal:</strong>
+              <div class="text-muted mt-1">{{ entry.main_subject }}</div>
+            </div>
             {% endif %}
-          {% endwith %}
+            
+            {% if entry.secondary_themes %}
+            <div class="text-muted">
+              <i class="fas fa-tags me-1"></i>
+              <strong>Thèmes secondaires:</strong>
+              <div class="mt-1">{{ entry.secondary_themes }}</div>
+            </div>
+            {% endif %}
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Delete confirmation modal -->
-  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="fas fa-hashtag text-primary mr-2"></i>Tags
+          </div>
+          <div class="card-body">
+            {% with tgs=entry.tags.all %}
+              {% if tgs %}
+                <div class="d-flex flex-wrap gap-2">
+                  {% for t in tgs %}
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                      #{{ t.name }}
+                    </span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="text-center text-muted py-2">
+                  <i class="fas fa-tags fa-lg mb-2 d-block"></i>
+                  Aucun tag
+                </div>
+              {% endif %}
+            {% endwith %}
+          </div>
         </div>
-        <div class="modal-body">Es-tu sûr de vouloir supprimer cette entrée ? Cette action est irréversible.</div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-          <form method="post" action="{% url 'journal:entry_delete' entry.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
-          </form>
+      </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-exclamation-triangle text-warning me-2 fa-lg"></i>
+              <span>Es-tu sûr de vouloir supprimer cette entrée ? Cette action est irréversible.</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <form method="post" action="{% url 'journal:entry_delete' entry.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash me-1"></i>Supprimer définitivement
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-{% endblock %}
+  
+  <!-- Footer -->
+  <footer class="footer footer-style-4">
+    <div class="container">
+      <div class="copyright-wrapper">
+        <p>Design by UIdeck</p>
+      </div>
+    </div>
+  </footer>
+  
+  <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
+  <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>
+  <script src="{% static 'frontend/assets/js/wow.min.js' %}"></script>
+  <script src="{% static 'frontend/assets/js/main.js' %}"></script>
+
+  <style>
+    .journal-content {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #2d3748;
+      line-height: 1.7;
+    }
+    
+    .indicator-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #e2e8f0;
+      transition: all 0.3s ease;
+    }
+    
+    .indicator-dot.active {
+      background-color: #667eea;
+      transform: scale(1.2);
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    }
+    
+    .card {
+      border-radius: 12px;
+    }
+    
+    .card-header {
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 600;
+    }
+    
+    .bg-light {
+      background-color: #f8fafc !important;
+    }
+    
+    .badge {
+      font-weight: 500;
+    }
+  </style>
+</body>
+</html>

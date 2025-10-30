@@ -1,16 +1,96 @@
-{% extends "admin/index.html" %}
+<!DOCTYPE html>
+<html class="no-js" lang="">
 {% load static %}
-{% block content %}
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Journal</title>
+    <meta name="description" content="Journal" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- ========================= CSS (from frontend) ========================= -->
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/bootstrap-5.0.0-beta1.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/LineIcons.2.0.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/tiny-slider.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/animate.css' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/assets/css/lindy-uikit.css' %}"/>
+    <!-- Font Awesome for richer iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <!-- ========================= Header (from frontend) ========================= -->
+    <header class="header header-6">
+      <div class="navbar-area">
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-lg-12">
+              <nav class="navbar navbar-expand-lg">
+                <a class="navbar-brand" href="{% url 'frontend_home' %}">
+                  <img src="{% static 'frontend/assets/img/logo/logo.svg' %}" alt="Logo" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent6" aria-controls="navbarSupportedContent6" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="toggler-icon"></span>
+                  <span class="toggler-icon"></span>
+                  <span class="toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent6">
+                  <ul id="nav6" class="navbar-nav ms-auto">
+                  <li class="nav-item"><a class="page-scroll" href="#home">Home</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#feature">Summarizer</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#about">About</a></li>
+                  <li class="nav-item"><a class="page-scroll active" href="{% url 'journal:entry_list' %}">Journal</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#pricing">Pricing</a></li>
+                  <li class="nav-item"><a class="page-scroll" href="#contact">Contact</a></li>
+                </ul>
+                </div>
+                <div class="header-action d-flex">
+                  {% if request.user.is_authenticated %}
+                  <a href="{% url 'profile' %}" title="Mon profil"> <i class="lni lni-user"></i> </a>
+                  <a href="{% url 'logout' %}" title="Logout"> <i class="lni lni-exit"></i> </a>
+                  {% endif %}
+                </div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- ========================= End Header ========================= -->
+    
+    <!-- ========================= Hero (from frontend) ========================= -->
+    <section id="home" class="hero-section-wrapper-5">
+      <div class="hero-section hero-style-5 img-bg" style="background-image: url('{% static "frontend/assets/img/hero/hero-5/hero-bg.svg" %}')">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-7">
+              <div class="hero-content-wrapper">
+                <h2 class="mb-30 wow fadeInUp" data-wow-delay=".2s">Mon Journal</h2>
+                <p class="mb-30 wow fadeInUp" data-wow-delay=".4s">Gérez vos entrées, revivez vos moments et suivez votre humeur au quotidien.</p>
+                <a href="{% url 'journal:entry_create' %}" class="button button-lg radius-50 wow fadeInUp" data-wow-delay=".6s">
+                  Nouvelle entrée <i class="lni lni-chevron-right"></i>
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-5 align-self-end d-none d-lg-block">
+              <div class="hero-image wow fadeInUp" data-wow-delay=".5s">
+                <img src="{% static 'frontend/assets/img/hero/hero-5/hero-img.svg' %}" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ========================= End Hero ========================= -->
+
 <div class="journal-container py-4">
     <!-- En-tête amélioré -->
     <div class="journal-header mb-5">
         <div class="d-flex align-items-center justify-content-between">
             <div>
-                <h1 class="journal-main-title mb-2">📔 Mon Journal</h1>
+                <h1 class="journal-main-title mb-2"><i class="fas fa-book-open me-2"></i> Mon Journal</h1>
                 <p class="journal-subtitle text-muted">Vos pensées et souvenirs précieux</p>
             </div>
             <a class="btn btn-primary btn-lg journal-create-btn" href="{% url 'journal:entry_create' %}">
-                <i class="fas fa-plus-circle mr-2"></i>Nouvelle entrée
+                <i class="fas fa-plus-circle me-2"></i>Nouvelle entrée
             </a>
         </div>
     </div>
@@ -30,7 +110,7 @@
                 </a>
                 {% endif %}
                 <button type="submit" class="btn btn-primary journal-search-btn">
-                    <i class="fas fa-search mr-2"></i>Rechercher
+                    <i class="fas fa-search me-2"></i>Rechercher
                 </button>
             </div>
         </form>
@@ -115,17 +195,17 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="journal-meta-info">
                                 <span class="journal-time-badge">
-                                    <i class="far fa-clock mr-1"></i>{{ e.get_time_of_day_display }}
+                                    <i class="fas fa-clock me-1"></i>{{ e.get_time_of_day_display }}
                                 </span>
                                 {% if e.location %}
                                 <span class="journal-location-badge">
-                                    <i class="fas fa-map-marker-alt mr-1"></i>{{ e.get_location_display }}
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ e.get_location_display }}
                                 </span>
                                 {% endif %}
                             </div>
                             {% if e.mood %}
                             <span class="journal-mood-indicator" data-mood="{{ e.mood }}">
-                                {{ e.get_mood_display }}
+                                <i class="fas fa-{% if e.mood == 'HAPPY' %}smile{% elif e.mood == 'SAD' %}frown{% elif e.mood == 'ANGRY' %}angry{% elif e.mood == 'EXCITED' %}laugh{% else %}meh{% endif %} me-1"></i>{{ e.get_mood_display }}
                             </span>
                             {% endif %}
                         </div>
@@ -133,128 +213,167 @@
 
                     <!-- Titre -->
                     <h5 class="journal-card-title mb-3">
-                        <a href="{% url 'journal:entry_detail' e.pk %}" aria-label="Voir les détails de {{ e.title }}">{{ e.title }}</a>
+                        <a href="{% url 'journal:entry_detail' e.pk %}" class="text-decoration-none text-dark" aria-label="Voir les détails de {{ e.title }}">{{ e.title }}</a>
                     </h5>
                     
                     <!-- Contenu principal -->
                     {% if e.content %}
                     <div class="journal-card-content mb-3">
-                        <p class="journal-content-preview">{{ e.content|truncatechars:150 }}</p>
+                        <p class="journal-content-preview text-muted">{{ e.content|truncatechars:150 }}</p>
                     </div>
                     {% endif %}
 
-                    <!-- Indicateurs visuels -->
+                    <!-- Indicateurs visuels améliorés -->
                     <div class="journal-indicators mb-3">
                         <div class="indicator-row">
                             {% if e.main_mood_level %}
-                            <div class="indicator-item" title="Humeur">
-                                <span class="indicator-emoji">🙂</span>
+                            <div class="indicator-item" title="Humeur générale">
+                                <span class="indicator-emoji text-warning"><i class="fas fa-smile-beam"></i></span>
                                 <div class="indicator-bar">
                                     {% for i in "12345" %}
                                     <div class="indicator-dot {% if forloop.counter <= e.main_mood_level %}active{% endif %}"></div>
                                     {% endfor %}
                                 </div>
+                                <span class="indicator-value text-muted small">{{ e.main_mood_level }}/5</span>
                             </div>
                             {% endif %}
                             
                             {% if e.energy_level %}
-                            <div class="indicator-item" title="Énergie">
-                                <span class="indicator-emoji">⚡</span>
+                            <div class="indicator-item" title="Niveau d'énergie">
+                                <span class="indicator-emoji text-success"><i class="fas fa-bolt"></i></span>
                                 <div class="indicator-bar">
                                     {% for i in "12345" %}
                                     <div class="indicator-dot {% if forloop.counter <= e.energy_level %}active{% endif %}"></div>
                                     {% endfor %}
                                 </div>
+                                <span class="indicator-value text-muted small">{{ e.energy_level }}/5</span>
                             </div>
                             {% endif %}
                             
                             {% if e.sleep_quality %}
-                            <div class="indicator-item" title="Sommeil">
-                                <span class="indicator-emoji">😴</span>
+                            <div class="indicator-item" title="Qualité du sommeil">
+                                <span class="indicator-emoji text-info"><i class="fas fa-bed"></i></span>
                                 <div class="indicator-bar">
                                     {% for i in "12345" %}
                                     <div class="indicator-dot {% if forloop.counter <= e.sleep_quality %}active{% endif %}"></div>
                                     {% endfor %}
                                 </div>
+                                <span class="indicator-value text-muted small">{{ e.sleep_quality }}/5</span>
                             </div>
                             {% endif %}
                         </div>
                     </div>
 
-                    <!-- Points clés organisés -->
+                    <!-- Points clés organisés avec icônes spécifiques -->
                     <div class="journal-highlights mb-3">
                         {% if e.main_subject %}
                         <div class="highlight-item">
-                            <i class="fas fa-compass text-primary"></i>
-                            <span class="highlight-text">{{ e.main_subject|truncatechars:40 }}</span>
+                            <i class="fas fa-bullseye text-primary highlight-icon"></i>
+                            <div class="highlight-content">
+                                <div class="highlight-label text-muted small">Sujet principal</div>
+                                <div class="highlight-text text-dark">{{ e.main_subject|truncatechars:40 }}</div>
+                            </div>
                         </div>
                         {% endif %}
                         
                         {% if e.favorite_moment %}
                         <div class="highlight-item">
-                            <i class="fas fa-star text-warning"></i>
-                            <span class="highlight-text">{{ e.favorite_moment|truncatechars:40 }}</span>
+                            <i class="fas fa-heart text-danger highlight-icon"></i>
+                            <div class="highlight-content">
+                                <div class="highlight-label text-muted small">Moment préféré</div>
+                                <div class="highlight-text text-dark">{{ e.favorite_moment|truncatechars:40 }}</div>
+                            </div>
                         </div>
                         {% endif %}
                         
                         {% if e.achievement %}
                         <div class="highlight-item">
-                            <i class="fas fa-trophy text-success"></i>
-                            <span class="highlight-text">{{ e.achievement|truncatechars:40 }}</span>
+                            <i class="fas fa-trophy text-warning highlight-icon"></i>
+                            <div class="highlight-content">
+                                <div class="highlight-label text-muted small">Réussite</div>
+                                <div class="highlight-text text-dark">{{ e.achievement|truncatechars:40 }}</div>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
 
-                    <!-- Badges contextuels -->
+                    <!-- Badges contextuels avec icônes spécifiques -->
                     <div class="journal-badges mb-3">
                         {% if e.weather %}
                         <span class="context-badge weather-{{ e.weather }}">
-                            <i class="fas fa-cloud"></i> {{ e.get_weather_display }}
+                            <i class="fas fa-{% if e.weather == 'SUNNY' %}sun{% elif e.weather == 'RAINY' %}cloud-rain{% elif e.weather == 'CLOUDY' %}cloud{% elif e.weather == 'SNOW' %}snowflake{% else %}cloud{% endif %} me-1"></i> 
+                            {{ e.get_weather_display }}
                         </span>
                         {% endif %}
                         
                         {% if e.physical_activity %}
                         <span class="context-badge activity-{{ e.physical_activity }}">
-                            <i class="fas fa-running"></i> {{ e.get_physical_activity_display }}
+                            <i class="fas fa-{% if e.physical_activity == '15MIN' %}walking{% elif e.physical_activity == '30MIN' %}running{% elif e.physical_activity == '1HOUR' %}bicycle{% elif e.physical_activity == 'INTENSE' %}dumbbell{% else %}walking{% endif %} me-1"></i> 
+                            {{ e.get_physical_activity_display }}
                         </span>
                         {% endif %}
                         
                         {% if e.meals_quality %}
                         <span class="context-badge meals-{{ e.meals_quality }}">
-                            <i class="fas fa-utensils"></i> {{ e.get_meals_quality_display }}
+                            <i class="fas fa-{% if e.meals_quality == 'GOOD' %}utensils{% elif e.meals_quality == 'AVERAGE' %}apple-alt{% elif e.meals_quality == 'POOR' %}pizza-slice{% else %}utensils{% endif %} me-1"></i> 
+                            {{ e.get_meals_quality_display }}
                         </span>
                         {% endif %}
+                        
+                        {% if e.season %}
+                        <span class="context-badge season-{{ e.season }}">
+                            <i class="fas fa-leaf me-1"></i> 
+                            {{ e.get_season_display }}
+                        </span>
+                        {% endif %}
+                        
+                        {% with mc=e.media.count %}
+                        {% if mc %}
+                        <span class="context-badge media-count">
+                            <i class="fas fa-image me-1"></i> 
+                            {{ mc }}
+                        </span>
+                        {% endif %}
+                        {% endwith %}
                     </div>
 
-                    <!-- Tags -->
+                    <!-- Tags améliorés -->
                     {% with tgs=e.tags.all %}
                     {% if tgs %}
                     <div class="journal-tags mb-3">
-                        {% for t in tgs %}
-                        <span class="journal-tag">#{{ t.name }}</span>
-                        {% endfor %}
+                        <div class="tags-header">
+                            <i class="fas fa-tags text-muted me-1 small"></i>
+                            <span class="tags-label text-muted small">Tags</span>
+                        </div>
+                        <div class="tags-container">
+                            {% for t in tgs %}
+                            <span class="journal-tag">
+                                <i class="fas fa-hashtag me-1"></i>{{ t.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
                     </div>
                     {% endif %}
                     {% endwith %}
 
-                    <!-- Actions -->
+                    <!-- Actions améliorées -->
                     <div class="journal-card-actions mt-auto">
                         <div class="btn-group w-100" role="group">
                             <a class="btn btn-outline-primary btn-sm journal-action-btn" 
                                href="{% url 'journal:entry_detail' e.pk %}" 
-                               title="Voir les détails" data-toggle="tooltip" data-placement="top">
+                               title="Voir les détails">
                                 <i class="fas fa-eye"></i>
                                 <span class="btn-label">Voir</span>
                             </a>
                             <a class="btn btn-outline-secondary btn-sm journal-action-btn" 
                                href="{% url 'journal:entry_update' e.pk %}" 
-                               title="Modifier" data-toggle="tooltip" data-placement="top">
+                               title="Modifier">
                                 <i class="fas fa-edit"></i>
                                 <span class="btn-label">Modifier</span>
                             </a>
                             <form method="post" action="{% url 'journal:entry_delete' e.pk %}" 
                                   onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?');" 
-                                  class="d-inline" title="Supprimer" data-toggle="tooltip" data-placement="top">
+                                  class="d-inline">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-danger btn-sm journal-action-btn" title="Supprimer">
                                     <i class="fas fa-trash"></i>
@@ -276,7 +395,7 @@
                 <h3 class="empty-state-title h4 text-muted mb-3">Aucune entrée pour le moment</h3>
                 <p class="empty-state-text text-muted mb-4">Commencez votre aventure en créant votre première entrée de journal</p>
                 <a class="btn btn-primary btn-lg px-4" href="{% url 'journal:entry_create' %}">
-                    <i class="fas fa-plus-circle mr-2"></i>Créer ma première entrée
+                    <i class="fas fa-plus-circle me-2"></i>Créer ma première entrée
                 </a>
             </div>
         </div>
@@ -292,7 +411,7 @@
                 <li class="page-item">
                     <a class="page-link pagination-prev" 
                        href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">
-                        <i class="fas fa-chevron-left mr-2"></i>Précédent
+                        <i class="fas fa-chevron-left me-2"></i>Précédent
                     </a>
                 </li>
                 {% endif %}
@@ -313,7 +432,7 @@
                 <li class="page-item">
                     <a class="page-link pagination-next" 
                        href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">
-                        Suivant<i class="fas fa-chevron-right ml-2"></i>
+                        Suivant<i class="fas fa-chevron-right ms-2"></i>
                     </a>
                 </li>
                 {% endif %}
@@ -323,7 +442,97 @@
     {% endif %}
 </div>
 
+    <!-- ========================= Footer (from frontend) ========================= -->
+    <footer class="footer footer-style-4">
+      <div class="container">
+        <div class="widget-wrapper">
+          <div class="row">
+            <div class="col-xl-3 col-lg-4 col-md-6">
+              <div class="footer-widget">
+                <div class="logo">
+                  <a href="#0"> <img src="{% static 'frontend/assets/img/logo/logo.svg' %}" alt=""> </a>
+                </div>
+                <p class="desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <ul class="socials">
+                  <li> <a href="#0"> <i class="lni lni-facebook-filled"></i> </a> </li>
+                  <li> <a href="#0"> <i class="lni lni-twitter-filled"></i> </a> </li>
+                  <li> <a href="#0"> <i class="lni lni-instagram-filled"></i> </a> </li>
+                  <li> <a href="#0"> <i class="lni lni-linkedin-original"></i> </a> </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-xl-2 offset-xl-1 col-lg-2 col-md-6 col-sm-6">
+              <div class="footer-widget">
+                <h6>Quick Link</h6>
+                <ul class="links">
+                  <li> <a href="{% url 'frontend_home' %}">Home</a> </li>
+                  <li> <a href="{% url 'frontend_home' %}#about">About</a> </li>
+                  <li> <a href="{% url 'frontend_home' %}#feature">Service</a> </li>
+                  <li> <a href="{% url 'frontend_home' %}#contact">Contact</a> </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+              <div class="footer-widget">
+                <h6>Services</h6>
+                <ul class="links">
+                  <li> <a href="#0">Web Design</a> </li>
+                  <li> <a href="#0">Web Development</a> </li>
+                  <li> <a href="#0">Seo Optimization</a> </li>
+                  <li> <a href="#0">Blog Writing</a> </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-xl-3 col-lg-3 col-md-6">
+              <div class="footer-widget">
+                <h6>Download App</h6>
+                <ul class="download-app">
+                  <li>
+                    <a href="#0">
+                      <span class="icon"><i class="lni lni-apple"></i></span>
+                      <span class="text">Download on the <b>App Store</b> </span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#0">
+                      <span class="icon"><i class="lni lni-play-store"></i></span>
+                      <span class="text">GET IT ON <b>Play Store</b> </span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="copyright-wrapper">
+          <p>Design and Developed by <a href="https://uideck.com" rel="nofollow" target="_blank">UIdeck</a></p>
+        </div>
+      </div>
+    </footer>
+    <!-- ========================= End Footer ========================= -->
+
+    <!-- ========================= JS (from frontend) ========================= -->
+    <script src="{% static 'frontend/assets/js/bootstrap-5.0.0-beta1.min.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/tiny-slider.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/wow.min.js' %}"></script>
+    <script src="{% static 'frontend/assets/js/main.js' %}"></script>
+
 <style>
+:root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --secondary: #f093fb;
+    --success: #4CAF50;
+    --danger: #f44336;
+    --warning: #ff9800;
+    --info: #2196F3;
+    --dark: #2D3748;
+    --gray: #718096;
+    --gray-light: #E2E8F0;
+    --light: #F7FAFC;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 .journal-container {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     min-height: 100vh;
@@ -349,6 +558,12 @@
     padding: 12px 24px;
     font-weight: 600;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.journal-create-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 /* Barre de recherche */
@@ -356,6 +571,12 @@
     border-radius: 16px;
     overflow: hidden;
     box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.journal-search-form .input-group:focus-within {
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
 }
 
 .journal-search-icon {
@@ -363,28 +584,39 @@
     border: none;
     padding: 12px 20px;
     font-size: 1.1rem;
+    color: var(--gray);
 }
 
 .journal-search-input {
     border: none;
     padding: 12px 0;
     font-size: 1rem;
+    background: white;
 }
 
 .journal-search-input:focus {
     box-shadow: none;
+    background: white;
 }
 
 .journal-clear-search {
     border: none;
     background: white;
     padding: 12px 20px;
+    color: var(--gray);
+    transition: color 0.2s ease;
+}
+
+.journal-clear-search:hover {
+    color: var(--danger);
 }
 
 .journal-search-btn {
     border-radius: 0 16px 16px 0;
     padding: 12px 24px;
     font-weight: 600;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
 }
 
 /* Statistiques */
@@ -394,29 +626,43 @@
 
 .stat-card {
     background: white;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 1.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
     box-shadow: var(--shadow);
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
 }
 
 .stat-icon {
-    font-size: 2rem;
-    opacity: 0.8;
+    font-size: 2.5rem;
+    opacity: 0.9;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+}
+
+.stat-content {
+    flex: 1;
 }
 
 .stat-number {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--dark);
     line-height: 1;
+    margin-bottom: 0.25rem;
 }
 
 .stat-label {
@@ -476,11 +722,12 @@
 .date-badge {
     background: rgba(255, 255, 255, 0.95);
     color: var(--dark);
-    padding: 6px 12px;
+    padding: 8px 16px;
     border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
 }
 
 /* En-tête de carte */
@@ -498,72 +745,90 @@
 .journal-location-badge {
     background: var(--gray-light);
     color: var(--dark);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .journal-mood-indicator {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
-    padding: 6px 12px;
+    padding: 8px 16px;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* Titre et contenu */
 .journal-card-title {
     color: var(--dark);
     font-weight: 700;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.journal-card-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.journal-card-title a:hover {
+    color: var(--primary);
 }
 
 .journal-content-preview {
     color: var(--gray);
     line-height: 1.6;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
 }
 
-/* Indicateurs */
+/* Indicateurs améliorés */
 .journal-indicators {
-    padding: 1rem 0;
+    padding: 1.25rem 0;
     border-top: 1px solid var(--gray-light);
     border-bottom: 1px solid var(--gray-light);
+    margin: 1rem 0;
 }
 
 .indicator-row {
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
     gap: 1rem;
 }
 
 .indicator-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex: 1;
+    gap: 12px;
 }
 
 .indicator-emoji {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    width: 24px;
+    text-align: center;
 }
 
 .indicator-bar {
     display: flex;
-    gap: 3px;
+    gap: 4px;
     flex: 1;
+    align-items: center;
 }
 
 .indicator-dot {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--gray-light);
     transition: all 0.3s ease;
@@ -571,51 +836,119 @@
 
 .indicator-dot.active {
     background: var(--primary);
-    transform: scale(1.2);
+    transform: scale(1.3);
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 }
 
-/* Points clés */
+.indicator-value {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dark);
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Points clés améliorés */
 .journal-highlights {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    margin: 1rem 0;
 }
 
 .highlight-item {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.highlight-icon {
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.highlight-content {
+    flex: 1;
+}
+
+.highlight-label {
+    font-size: 0.75rem;
+    color: var(--gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
 }
 
 .highlight-text {
     color: var(--dark);
     font-weight: 500;
+    font-size: 0.9rem;
+    line-height: 1.4;
 }
 
-/* Badges */
+/* Badges améliorés */
 .journal-badges {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
+    margin: 1rem 0;
 }
 
 .context-badge {
-    padding: 4px 8px;
+    padding: 6px 12px;
     border-radius: 12px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     background: var(--gray-light);
     color: var(--dark);
+    transition: all 0.2s ease;
+}
+
+.context-badge:hover {
+    transform: translateY(-1px);
 }
 
 .weather-SUNNY { background: #fff9c4; color: #f57f17; }
 .weather-RAINY { background: #e3f2fd; color: #1565c0; }
+.weather-CLOUDY { background: #f5f5f5; color: #757575; }
+.weather-SNOW { background: #e1f5fe; color: #0277bd; }
 .activity-15MIN { background: #e8f5e8; color: #2e7d32; }
+.activity-30MIN { background: #c8e6c9; color: #1b5e20; }
+.activity-1HOUR { background: #a5d6a7; color: #1b5e20; }
+.activity-INTENSE { background: #81c784; color: #1b5e20; }
 .meals-GOOD { background: #fff3e0; color: #ef6c00; }
+.meals-AVERAGE { background: #ffe0b2; color: #f57c00; }
+.meals-POOR { background: #ffcc80; color: #ef6c00; }
+.season-SPRING { background: #e8f5e8; color: #2e7d32; }
+.season-SUMMER { background: #fff3e0; color: #f57c00; }
+.season-AUTUMN { background: #fff9c4; color: #f57f17; }
+.season-WINTER { background: #e3f2fd; color: #1565c0; }
+.media-count { background: #f3e5f5; color: #7b1fa2; }
 
-/* Tags */
+/* Tags améliorés */
 .journal-tags {
+    margin: 1rem 0;
+}
+
+.tags-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: var(--gray);
+    font-weight: 600;
+}
+
+.tags-container {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -624,36 +957,69 @@
 .journal-tag {
     background: rgba(139, 95, 191, 0.1);
     color: var(--primary);
-    padding: 4px 8px;
+    padding: 6px 12px;
     border-radius: 12px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 500;
     border: 1px solid rgba(139, 95, 191, 0.2);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-/* Actions */
+.journal-tag:hover {
+    background: rgba(139, 95, 191, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Actions améliorées */
 .journal-card-actions {
-    padding-top: 1rem;
+    padding-top: 1.25rem;
     border-top: 1px solid var(--gray-light);
+    margin-top: auto;
 }
 
 .journal-action-btn {
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     flex: 1;
     transition: all 0.2s ease;
-}
-
-.journal-action-btn .btn-label {
-    font-size: 0.75rem;
+    border: 1px solid var(--gray-light);
+    background: white;
 }
 
 .journal-action-btn:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.journal-action-btn .btn-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.btn-outline-primary.journal-action-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.btn-outline-secondary.journal-action-btn:hover {
+    background: var(--gray);
+    border-color: var(--gray);
+    color: white;
+}
+
+.btn-outline-danger.journal-action-btn:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
 }
 
 /* État vide */
@@ -662,23 +1028,30 @@
     border-radius: 20px;
     padding: 4rem 2rem;
     box-shadow: var(--shadow);
+    border: 2px dashed var(--gray-light);
 }
 
 .empty-state-icon {
     opacity: 0.5;
+    margin-bottom: 2rem;
 }
 
 .empty-state-title {
     font-weight: 600;
+    margin-bottom: 1rem;
 }
 
 .empty-state-text {
     font-size: 1.1rem;
     max-width: 400px;
-    margin: 0 auto;
+    margin: 0 auto 2rem;
 }
 
 /* Pagination */
+.journal-pagination {
+    margin-top: 3rem;
+}
+
 .journal-pagination .pagination {
     gap: 8px;
 }
@@ -688,19 +1061,24 @@
     border: 1px solid var(--gray-light);
     color: var(--dark);
     font-weight: 500;
-    padding: 10px 20px;
+    padding: 12px 20px;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .journal-pagination .page-item.active .page-link {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     border-color: var(--primary);
     color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .journal-pagination .page-link:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
 }
 
 /* Responsive */
@@ -722,18 +1100,31 @@
         font-size: 1.5rem;
     }
     
+    .stat-icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+    }
+    
     .journal-action-btn .btn-label {
         display: none;
     }
     
-    .indicator-row {
-        gap: 0.5rem;
+    .indicator-item {
+        gap: 8px;
     }
     
-    .indicator-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 4px;
+    .highlight-item {
+        gap: 8px;
+    }
+    
+    .journal-badges {
+        gap: 6px;
+    }
+    
+    .context-badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
     }
 }
 
@@ -748,40 +1139,74 @@
     
     .stat-card {
         padding: 0.75rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
     }
     
     .stat-icon {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
+        width: 40px;
+        height: 40px;
     }
     
     .stat-number {
         font-size: 1.3rem;
     }
+    
+    .journal-search-btn .btn-label {
+        display: none;
+    }
+    
+    .journal-search-btn i {
+        margin: 0;
+    }
+    
+    .indicator-row {
+        gap: 0.75rem;
+    }
+    
+    .journal-highlights {
+        gap: 8px;
+    }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.journal-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.stat-card {
+    animation: fadeInUp 0.8s ease-out;
 }
 </style>
 
 <script>
 // Animation au chargement
 document.addEventListener('DOMContentLoaded', function() {
-    // Animation des cartes
+    // Animation des cartes avec délai
     const cards = document.querySelectorAll('.journal-card');
     cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            card.style.transition = 'all 0.5s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
+        card.style.animationDelay = `${index * 0.1}s`;
     });
     
-    // Animation des statistiques
+    // Animation des statistiques avec compteur
     const statNumbers = document.querySelectorAll('.stat-number');
     statNumbers.forEach(stat => {
         const finalNumber = parseInt(stat.textContent);
         let current = 0;
-        const increment = finalNumber / 30;
+        const increment = finalNumber / 20;
         const timer = setInterval(() => {
             current += increment;
             if (current >= finalNumber) {
@@ -791,10 +1216,21 @@ document.addEventListener('DOMContentLoaded', function() {
             stat.textContent = Math.round(current);
         }, 50);
     });
-    // Init tooltips (Bootstrap 4)
-    if (window.jQuery && typeof jQuery.fn.tooltip === 'function') {
-        jQuery('[data-toggle="tooltip"]').tooltip();
-    }
+    
+    // Gestion des erreurs d'image
+    const images = document.querySelectorAll('.journal-card-img');
+    images.forEach(img => {
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            const placeholder = this.nextElementSibling;
+            if (placeholder && placeholder.classList.contains('journal-card-placeholder')) {
+                placeholder.style.display = 'flex';
+            }
+        });
+    });
 });
+
+
 </script>
-{% endblock %}
+  </body>
+</html>
