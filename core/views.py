@@ -10,12 +10,321 @@ from .forms import SignupForm, EmailAuthForm
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.db.models.functions import TruncMonth
+from django.db.models import Count, Q
+from django.utils import timezone
+import json
 import json
 import urllib.parse
 import urllib.request
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+
+from .models import Reclamation
+
+# Simple lexicon-based sentiment analysis (no external dependencies)
+POSITIVE_WORDS = {
+    'merci', 'bien', 'super', 'excellent', 'parfait', 'genial', 'satisfait',
+    'rapide', 'bravo', 'aime', 'content', 'heureux', 'cool', 'top', 'magnifique',
+}
+NEGATIVE_WORDS = {
+    'mauvais', 'horrible', 'lent', 'nul', 'probleme', 'insatisfait', 'mécontent',
+    'triste', 'déçu', 'decu', 'furieux', 'colère', 'colere', 'bug', 'erreur',
+    'nul', 'pire', 'catastrophe', 'lamentable', 'difficile', 'impossible',
+}
+
+
+def analyze_sentiment(text):
+    if not text:
+        return 'neutral'
+    cleaned = re.sub(r'[^A-Za-zÀ-ÿ\s]', ' ', text.lower())
+    tokens = cleaned.split()
+    pos = sum(1 for token in tokens if token in POSITIVE_WORDS)
+    neg = sum(1 for token in tokens if token in NEGATIVE_WORDS)
+    if pos > neg:
+        return 'positive'
+    if neg > pos:
+        return 'negative'
+    return 'neutral'
 
 def admin_dashboard(request):
-    return render(request, 'admin/index.html')
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_staff:
+        messages.error(request, "Accès refusé.")
+        return redirect('root')
+    users = User.objects.all().order_by('-date_joined')
+    now = timezone.now().date().replace(day=1)
+    ym = []
+    y, m = now.year, now.month
+    for _ in range(12):
+        ym.append((y, m))
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    ym.reverse()
+    monthly_qs = User.objects.annotate(mm=TruncMonth('date_joined')).values('mm').annotate(c=Count('id'))
+    monthly_map = {item['mm'].date(): item['c'] for item in monthly_qs if item['mm']}
+    month_labels = [f"{yy}-{mm:02d}" for (yy, mm) in ym]
+    from datetime import date as _date
+    month_counts = [monthly_map.get(_date(yy, mm, 1), 0) for (yy, mm) in ym]
+    total_users = users.count()
+    admin_count = User.objects.filter(is_superuser=True).count()
+    utilisateur_count = max(total_users - admin_count, 0)
+    chart_ctx = {
+        'chart_month_labels': json.dumps(month_labels),
+        'chart_month_counts': json.dumps(month_counts),
+        'chart_roles_labels': json.dumps(['Admin', 'Utilisateur']),
+        'chart_roles_counts': json.dumps([admin_count, utilisateur_count]),
+    }
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'add')
+        if action == 'add':
+            # Handle Add User form submission
+            username = request.POST.get('au_username', '').strip()
+            email = request.POST.get('au_email', '').strip()
+            password = request.POST.get('au_password', '')
+            is_staff = bool(request.POST.get('au_is_staff'))
+            is_superuser = bool(request.POST.get('au_is_superuser'))
+
+            au_errors = {}
+            if not re.fullmatch(r'[A-Za-z0-9._-]{3,30}', username):
+                au_errors['au_username'] = "Nom d’utilisateur invalide (3-30 caractères, lettres/chiffres . _ -)."
+            elif User.objects.filter(username__iexact=username).exists():
+                au_errors['au_username'] = "Ce nom d’utilisateur est déjà pris."
+
+            if not password:
+                au_errors['au_password'] = "Mot de passe requis."
+            else:
+                try:
+                    validate_password(password)
+                except ValidationError as ve:
+                    au_errors['au_password'] = ' '.join(ve.messages)
+
+            if au_errors:
+                ctx = {
+                    'users': users,
+                    'au_errors': au_errors,
+                    'open_add_user': True,
+                    'au_values': {
+                        'au_username': username,
+                        'au_email': email,
+                        'au_is_staff': is_staff,
+                        'au_is_superuser': is_superuser,
+                    }
+                }
+                ctx.update(chart_ctx)
+                return render(request, 'admin/index.html', ctx)
+
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.is_staff = is_staff
+            user.is_superuser = is_superuser if request.user.is_superuser else False
+            user.save()
+            messages.success(request, 'Utilisateur ajouté avec succès.')
+            return redirect('admin_dashboard')
+
+        elif action == 'edit':
+            uid = request.POST.get('eu_user_id')
+            try:
+                target = User.objects.get(pk=uid)
+            except User.DoesNotExist:
+                messages.error(request, "Utilisateur introuvable.")
+                return redirect('admin_dashboard')
+
+            username = request.POST.get('eu_username', '').strip()
+            email = request.POST.get('eu_email', '').strip()
+            password = request.POST.get('eu_password', '')
+            is_staff = bool(request.POST.get('eu_is_staff'))
+            is_superuser = bool(request.POST.get('eu_is_superuser'))
+
+            eu_errors = {}
+            if not re.fullmatch(r'[A-Za-z0-9._-]{3,30}', username):
+                eu_errors['eu_username'] = "Nom d’utilisateur invalide (3-30 caractères, lettres/chiffres . _ -)."
+            elif User.objects.filter(username__iexact=username).exclude(pk=target.pk).exists():
+                eu_errors['eu_username'] = "Ce nom d’utilisateur est déjà pris."
+
+            if password:
+                try:
+                    validate_password(password, user=target)
+                except ValidationError as ve:
+                    eu_errors['eu_password'] = ' '.join(ve.messages)
+
+            # Protections
+            if target.is_superuser and not request.user.is_superuser:
+                messages.error(request, "Action non autorisée sur un administrateur.")
+                return redirect('admin_dashboard')
+
+            if eu_errors:
+                ctx = {
+                    'users': users,
+                    'eu_errors': eu_errors,
+                    'open_edit_user': True,
+                    'edit_user_id': target.pk,
+                    'eu_values': {
+                        'eu_username': username or target.username,
+                        'eu_email': email or target.email,
+                        'eu_is_staff': is_staff if 'eu_is_staff' in request.POST else target.is_staff,
+                        'eu_is_superuser': is_superuser if 'eu_is_superuser' in request.POST else target.is_superuser,
+                    }
+                }
+                ctx.update(chart_ctx)
+                return render(request, 'admin/index.html', ctx)
+
+            target.username = username
+            target.email = email
+            target.is_staff = is_staff
+            if request.user.is_superuser:
+                target.is_superuser = is_superuser
+            if password:
+                target.set_password(password)
+            target.save()
+            messages.success(request, 'Utilisateur mis à jour.')
+            return redirect('admin_dashboard')
+
+        elif action == 'delete':
+            uid = request.POST.get('du_user_id')
+            try:
+                target = User.objects.get(pk=uid)
+            except User.DoesNotExist:
+                messages.error(request, "Utilisateur introuvable.")
+                return redirect('admin_dashboard')
+
+            if str(request.user.pk) == str(uid):
+                messages.error(request, "Vous ne pouvez pas supprimer votre propre compte.")
+                return redirect('admin_dashboard')
+            if target.is_superuser and not request.user.is_superuser:
+                messages.error(request, "Action non autorisée sur un administrateur.")
+                return redirect('admin_dashboard')
+
+            target.delete()
+            messages.success(request, 'Utilisateur supprimé.')
+            return redirect('admin_dashboard')
+
+        elif action == 'report':
+            # Generate a PDF report of monthly signups
+            try:
+                from reportlab.lib.pagesizes import A4
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.units import mm
+                from io import BytesIO
+
+                buffer = BytesIO()
+                pdf = canvas.Canvas(buffer, pagesize=A4)
+                width, height = A4
+
+                title = "Rapport: Inscriptions par mois (12 derniers mois)"
+                pdf.setFont("Helvetica-Bold", 14)
+                pdf.drawString(20*mm, height - 20*mm, title)
+
+                pdf.setFont("Helvetica", 10)
+                y = height - 30*mm
+                pdf.drawString(20*mm, y, f"Généré le: {timezone.now().strftime('%Y-%m-%d %H:%M')}")
+                y -= 12
+
+                # Table header
+                pdf.setFont("Helvetica-Bold", 11)
+                pdf.drawString(20*mm, y, "Mois")
+                pdf.drawString(100*mm, y, "Inscriptions")
+                y -= 8
+                pdf.line(20*mm, y, 190*mm, y)
+                y -= 6
+                pdf.setFont("Helvetica", 10)
+
+                for label, count in zip(json.loads(chart_ctx['chart_month_labels']), json.loads(chart_ctx['chart_month_counts'])):
+                    if y < 20*mm:
+                        pdf.showPage()
+                        y = height - 20*mm
+                        pdf.setFont("Helvetica-Bold", 11)
+                        pdf.drawString(20*mm, y, "Mois")
+                        pdf.drawString(100*mm, y, "Inscriptions")
+                        y -= 8
+                        pdf.line(20*mm, y, 190*mm, y)
+                        y -= 6
+                        pdf.setFont("Helvetica", 10)
+                    pdf.drawString(20*mm, y, str(label))
+                    pdf.drawString(100*mm, y, str(count))
+                    y -= 12
+
+                pdf.showPage()
+                pdf.save()
+                buffer.seek(0)
+
+                from django.http import HttpResponse
+                response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+                response['Content-Disposition'] = 'attachment; filename="rapport_inscriptions_mensuelles.pdf"'
+                return response
+            except Exception:
+                messages.error(request, "La génération du PDF nécessite la bibliothèque 'reportlab'. Exécutez: pip install reportlab")
+                return redirect('admin_dashboard')
+
+    # Filtering and sorting for users table (GET only)
+    search_q = request.GET.get('q', '').strip()
+    order_key = request.GET.get('order', '-date')
+    order_by = '-date_joined' if order_key == '-date' else 'date_joined'
+    users_list = users
+    if search_q:
+        users_list = users_list.filter(Q(username__icontains=search_q) | Q(email__icontains=search_q))
+    users_list = users_list.order_by(order_by)
+
+    ctx = {
+        'users': users_list,
+        'q': search_q,
+        'order': order_key,
+    }
+    ctx.update(chart_ctx)
+    return render(request, 'admin/index.html', ctx)
+
+def reclamations(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_staff:
+        messages.error(request, "Accès refusé.")
+        return redirect('root')
+    items = Reclamation.objects.select_related('user').all()
+    return render(request, 'admin/reclamations.html', {'reclamations': items})
+
+
+@require_POST
+def submit_reclamation(request):
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except Exception:
+        payload = {}
+
+    data = {
+        'name': (payload.get('name') or request.POST.get('name', '')).strip(),
+        'number': (payload.get('number') or request.POST.get('number', '')).strip(),
+        'subject': (payload.get('subject') or request.POST.get('subject', '')).strip(),
+        'message': (payload.get('message') or request.POST.get('message', '')).strip(),
+    }
+
+    errors = {}
+    if not (2 <= len(data['name']) <= 50) or re.search(r"[^A-Za-zÀ-ÿ'\-\s]", data['name']):
+        errors['name'] = "Nom invalide (2-50 caractères, lettres et espaces)."
+    if not re.fullmatch(r"\+?[0-9\s\-]{6,20}", data['number']):
+        errors['number'] = "Numéro invalide (6-20 chiffres, peut contenir +, espace, -)."
+    if not (2 <= len(data['subject']) <= 100):
+        errors['subject'] = "Sujet invalide (2-100 caractères)."
+    if not (10 <= len(data['message']) <= 1000):
+        errors['message'] = "Message invalide (10-1000 caractères)."
+
+    if errors:
+        return JsonResponse({'success': False, 'errors': errors}, status=400)
+
+    sentiment = analyze_sentiment(data['message'])
+    rec = Reclamation.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        name=data['name'],
+        number=data['number'],
+        subject=data['subject'],
+        message=data['message'],
+        sentiment=sentiment,
+    )
+
+    return JsonResponse({'success': True, 'id': rec.id})
 
 def frontend_home(request):
     return render(request, 'frontend/index.html')
@@ -89,6 +398,7 @@ def profile_view(request):
         full_name = request.POST.get('full_name', '').strip()
         username = request.POST.get('username', '').strip()
         birth_date = request.POST.get('birth_date', '').strip()
+        photo = request.FILES.get('photo')
 
         if username and username != request.user.username:
             # pattern: letters, numbers, dot, underscore, dash; length 3..30
@@ -113,6 +423,21 @@ def profile_view(request):
                     profile.birth_date = d
             except Exception:
                 errors['birth_date'] = "Date de naissance invalide (format YYYY-MM-DD)."
+
+        # Photo upload handling
+        if photo is not None:
+            # Ensure profile exists before assigning photo
+            if profile is None:
+                from .models import Profile
+                profile = Profile.objects.create(user=request.user)
+            content_type = getattr(photo, 'content_type', '') or ''
+            size = getattr(photo, 'size', 0) or 0
+            if not content_type.startswith('image/'):
+                errors['photo'] = "Le fichier doit être une image (JPEG, PNG, GIF, ...)."
+            elif size > 2 * 1024 * 1024:
+                errors['photo'] = "L’image est trop volumineuse (max 2 Mo)."
+            else:
+                profile.photo = photo
         # if there are any errors, render template with errors and keep inputs visible
         if errors:
             return render(request, 'frontend/profile.html', {'profile': profile, 'errors': errors})
@@ -125,6 +450,88 @@ def profile_view(request):
 
     # GET request: render the profile page
     return render(request, 'frontend/profile.html', {'profile': profile})
+
+@csrf_exempt
+def grok_chat(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except Exception:
+        data = {}
+    messages = data.get('messages') or []
+    prompt = data.get('prompt')
+    if not messages and prompt:
+        messages = [{'role': 'user', 'content': prompt}]
+    if not messages:
+        return JsonResponse({'error': 'messages or prompt required'}, status=400)
+
+    api_key = getattr(settings, 'GROK_API_KEY', '')
+    # Default to Groq endpoint unless overridden in env
+    api_base = getattr(settings, 'GROK_API_BASE', 'https://api.groq.com/openai/v1')
+    if not api_key:
+        return JsonResponse({'error': 'Server missing GROK_API_KEY'}, status=500)
+
+    # Align with user's working params
+    model = data.get('model', 'llama-3.3-70b-versatile')
+    payload = {
+        'model': model,
+        'messages': messages,
+        'temperature': data.get('temperature', 0.5),
+        'max_tokens': data.get('max_tokens', 512),
+        'stream': False,
+    }
+    try:
+        req = urllib.request.Request(
+            api_base.rstrip('/') + '/chat/completions',
+            data=json.dumps(payload).encode('utf-8'),
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            }
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            body = resp.read().decode('utf-8')
+            out = json.loads(body)
+    except urllib.error.HTTPError as e:
+        try:
+            err_body = e.read().decode('utf-8')
+        except Exception:
+            err_body = ''
+        info = {'error': 'Upstream API error', 'status': e.code}
+        if settings.DEBUG:
+            info['details'] = err_body
+        # For Groq, no special fallback unless client requests another
+        if model != 'llama-3.3-70b-versatile':
+            return JsonResponse(info, status=502)
+        try:
+            payload['model'] = 'llama-3.1-8b-instant'
+            req = urllib.request.Request(
+                api_base.rstrip('/') + '/chat/completions',
+                data=json.dumps(payload).encode('utf-8'),
+                headers={
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json',
+                }
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                body = resp.read().decode('utf-8')
+                out = json.loads(body)
+        except Exception:
+            return JsonResponse(info, status=502)
+    except Exception as e:
+        info = {'error': 'Upstream API error'}
+        if settings.DEBUG:
+            info['details'] = str(e)
+        return JsonResponse(info, status=502)
+
+    reply = ''
+    try:
+        reply = (out.get('choices') or [{}])[0].get('message', {}).get('content', '')
+    except Exception:
+        reply = ''
+    return JsonResponse({'reply': reply, 'raw': out})
+
 def change_password(request):
     if not request.user.is_authenticated:
         return redirect('login')

@@ -131,11 +131,11 @@
                     <span>Charts</span></a>
             </li>
 
-            <!-- Nav Item - Tables -->
+            <!-- Nav Item - Users Management -->
             <li class="nav-item">
-                <a class="nav-link" href="tables.html">
-                    <i class="fas fa-fw fa-table"></i>
-                    <span>Tables</span></a>
+                <a class="nav-link" href="#users">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Utilisateurs</span></a>
             </li>
 
             <!-- Divider -->
@@ -209,6 +209,13 @@
                                     </div>
                                 </form>
                             </div>
+                        </li>
+
+                        <!-- Nav Item - Reclamation Button -->
+                        <li class="nav-item mx-2 d-flex align-items-center">
+                          <a class="btn btn-sm btn-warning" href="{% url 'reclamations' %}">
+                            <i class="fas fa-exclamation-circle mr-1"></i> Reclamation
+                          </a>
                         </li>
 
                         <!-- Nav Item - Alerts -->
@@ -381,95 +388,105 @@
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-                        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-                                class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+                        <form method="post" action="" class="d-none d-sm-inline-block">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="report">
+                          <button type="submit" class="btn btn-sm btn-primary shadow-sm">
+                            <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+                          </button>
+                        </form>
+                    </div>
+
+                    <!-- Users Management -->
+                    <div class="row" id="users">
+                      <div class="col-12">
+                        <div class="card shadow mb-4">
+                          <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Utilisateurs inscrits</h6>
+                            <div class="d-flex align-items-center gap-2">
+                              <span class="text-muted small mr-2">Total: {{ users|length }}</span>
+                              <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addUserModal">
+                                <i class="fas fa-user-plus mr-1"></i> Ajouter un utilisateur
+                              </button>
+                            </div>
+                          </div>
+                          <div class="card-body">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                              <form method="get" action="" class="form-inline">
+                                <div class="input-group mr-2 mb-2">
+                                  <input type="text" class="form-control" name="q" placeholder="Rechercher (nom, email)" value="{{ q }}">
+                                  <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                                  </div>
+                                </div>
+                                <div class="form-group mb-2">
+                                  <label class="mr-2">Trier</label>
+                                  <select name="order" class="form-control" onchange="this.form.submit()">
+                                    <option value="-date" {% if order == '-date' %}selected{% endif %}>Plus récent d'abord</option>
+                                    <option value="date" {% if order == 'date' %}selected{% endif %}>Plus ancien d'abord</option>
+                                  </select>
+                                </div>
+                                {% if q %}
+                                <a href="?order={{ order }}" class="btn btn-link mb-2 ml-2">Effacer</a>
+                                {% endif %}
+                              </form>
+                            </div>
+                            <div class="table-responsive">
+                              <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                  <tr>
+                                    <th>#</th>
+                                    <th>Nom d’utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Inscription</th>
+                                    <th>Dernière connexion</th>
+                                    <th>Rôle</th>
+                                    <th>Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {% for u in users %}
+                                  <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ u.username }}</td>
+                                    <td>{{ u.email|default:'—' }}</td>
+                                    <td>{{ u.date_joined|date:'Y-m-d H:i' }}</td>
+                                    <td>{{ u.last_login|date:'Y-m-d H:i'|default:'—' }}</td>
+                                    <td>
+                                      {% if u.is_superuser %}
+                                        <span class="badge badge-danger">Admin</span>
+                                      {% elif u.is_staff %}
+                                        <span class="badge badge-info">Utilisateur</span>
+                                      {% else %}
+                                        <span class="badge badge-secondary">Utilisateur</span>
+                                      {% endif %}
+                                    </td>
+                                    <td>
+                                      <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editUserModal-{{ u.id }}">
+                                        <i class="fas fa-edit"></i>
+                                      </button>
+                                      <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteUserModal-{{ u.id }}">
+                                        <i class="fas fa-trash"></i>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                  {% empty %}
+                                  <tr>
+                                    <td colspan="7" class="text-center text-muted">Aucun utilisateur.</td>
+                                  </tr>
+                                  {% endfor %}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Content Row -->
                     <div class="row">
 
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Earnings (Monthly)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$40,000</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Earnings (Annual)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$215,000</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasks
-                                            </div>
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col-auto">
-                                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">50%</div>
-                                                </div>
-                                                <div class="col">
-                                                    <div class="progress progress-sm mr-2">
-                                                        <div class="progress-bar bg-info" role="progressbar"
-                                                            style="width: 50%" aria-valuenow="50" aria-valuemin="0"
-                                                            aria-valuemax="100"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Pending Requests Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Pending Requests</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-comments fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>
                                 {% block content %}{% endblock %}
 
@@ -536,17 +553,7 @@
                                     <div class="chart-pie pt-4 pb-2">
                                         <canvas id="myPieChart"></canvas>
                                     </div>
-                                    <div class="mt-4 text-center small">
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-primary"></i> Direct
-                                        </span>
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-success"></i> Social
-                                        </span>
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-info"></i> Referral
-                                        </span>
-                                    </div>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -727,6 +734,158 @@
     </div>
     <!-- End of Page Wrapper -->
 
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-labelledby="addUserModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addUserModalLabel">Ajouter un utilisateur</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form method="post" action="" novalidate>
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="au_username">Nom d’utilisateur</label>
+                <input type="text" class="form-control {% if au_errors.au_username %}is-invalid{% endif %}" id="au_username" name="au_username" value="{{ au_values.au_username|default:'' }}" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" required>
+                {% if au_errors.au_username %}<div class="invalid-feedback">{{ au_errors.au_username }}</div>{% endif %}
+              </div>
+              <div class="form-group">
+                <label for="au_email">Email (optionnel)</label>
+                <input type="email" class="form-control" id="au_email" name="au_email" value="{{ au_values.au_email|default:'' }}">
+              </div>
+              <div class="form-group">
+                <label for="au_password">Mot de passe</label>
+                <input type="password" class="form-control {% if au_errors.au_password %}is-invalid{% endif %}" id="au_password" name="au_password" required>
+                {% if au_errors.au_password %}<div class="invalid-feedback">{{ au_errors.au_password }}</div>{% endif %}
+              </div>
+              <div class="form-row">
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="au_is_staff" name="au_is_staff" {% if au_values.au_is_staff %}checked{% endif %}>
+                    <label class="custom-control-label" for="au_is_staff">Utilisateur</label>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="au_is_superuser" name="au_is_superuser" {% if au_values.au_is_superuser %}checked{% endif %}>
+                    <label class="custom-control-label" for="au_is_superuser">Admin</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Créer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% if open_add_user %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        if(window.jQuery && $('#addUserModal').modal){ $('#addUserModal').modal('show'); }
+      });
+    </script>
+    {% endif %}
+
+    {# Edit/Delete user modals #}
+    {% for u in users %}
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal-{{ u.id }}" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel-{{ u.id }}" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editUserModalLabel-{{ u.id }}">Modifier l’utilisateur</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form method="post" action="" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="eu_user_id" value="{{ u.id }}">
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="eu_username_{{ u.id }}">Nom d’utilisateur</label>
+                <input type="text" class="form-control {% if open_edit_user and edit_user_id == u.id and eu_errors.eu_username %}is-invalid{% endif %}" id="eu_username_{{ u.id }}" name="eu_username" value="{% if open_edit_user and edit_user_id == u.id %}{{ eu_values.eu_username }}{% else %}{{ u.username }}{% endif %}" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" required>
+                <div class="invalid-feedback">{% if open_edit_user and edit_user_id == u.id and eu_errors.eu_username %}{{ eu_errors.eu_username }}{% else %}3-30 caractères: lettres, chiffres, . _ -{% endif %}</div>
+              </div>
+              <div class="form-group">
+                <label for="eu_email_{{ u.id }}">Email (optionnel)</label>
+                <input type="email" class="form-control" id="eu_email_{{ u.id }}" name="eu_email" value="{% if open_edit_user and edit_user_id == u.id %}{{ eu_values.eu_email }}{% else %}{{ u.email }}{% endif %}">
+                <div class="invalid-feedback">Email invalide.</div>
+              </div>
+              <div class="form-group">
+                <label for="eu_password_{{ u.id }}">Nouveau mot de passe (optionnel)</label>
+                <input type="password" class="form-control {% if open_edit_user and edit_user_id == u.id and eu_errors.eu_password %}is-invalid{% endif %}" id="eu_password_{{ u.id }}" name="eu_password">
+                <div class="invalid-feedback">{% if open_edit_user and edit_user_id == u.id and eu_errors.eu_password %}{{ eu_errors.eu_password }}{% else %}Laisser vide pour ne pas changer le mot de passe.{% endif %}</div>
+              </div>
+              <div class="form-row">
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="eu_is_staff_{{ u.id }}" name="eu_is_staff" {% if open_edit_user and edit_user_id == u.id %}{% if eu_values.eu_is_staff %}checked{% endif %}{% else %}{% if u.is_staff %}checked{% endif %}{% endif %}>
+                    <label class="custom-control-label" for="eu_is_staff_{{ u.id }}">Utilisateur</label>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="eu_is_superuser_{{ u.id }}" name="eu_is_superuser" {% if open_edit_user and edit_user_id == u.id %}{% if eu_values.eu_is_superuser %}checked{% endif %}{% else %}{% if u.is_superuser %}checked{% endif %}{% endif %} {% if not request.user.is_superuser %}disabled{% endif %}>
+                    <label class="custom-control-label" for="eu_is_superuser_{{ u.id }}">Admin</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div class="modal fade" id="deleteUserModal-{{ u.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteUserModalLabel-{{ u.id }}" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteUserModalLabel-{{ u.id }}">Supprimer l’utilisateur</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="du_user_id" value="{{ u.id }}">
+            <div class="modal-body">
+              <p>Voulez-vous vraiment supprimer le compte <strong>{{ u.username }}</strong> ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-danger">Supprimer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if open_edit_user and edit_user_id %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        var id = '{{ edit_user_id }}';
+        var sel = '#editUserModal-' + id;
+        if(window.jQuery && $(sel).modal){ $(sel).modal('show'); }
+      });
+    </script>
+    {% endif %}
+
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
@@ -765,9 +924,77 @@
     <!-- Page level plugins -->
     <script src="{% static 'admin/vendor/chart.js/Chart.min.js' %}"></script>
 
-    <!-- Page level custom scripts -->
-    <script src="{% static 'admin/js/demo/chart-area-demo.js' %}"></script>
-    <script src="{% static 'admin/js/demo/chart-pie-demo.js' %}"></script>
+    <!-- Charts: Monthly signups and roles distribution -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        try {
+          var monthLabels = {{ chart_month_labels|safe }};
+          var monthCounts = {{ chart_month_counts|safe }};
+          var rolesLabels = {{ chart_roles_labels|safe }};
+          var rolesCounts = {{ chart_roles_counts|safe }};
+
+          // Area/Line chart for monthly signups
+          var areaEl = document.getElementById('myAreaChart');
+          if(areaEl && window.Chart){
+            new Chart(areaEl, {
+              type: 'line',
+              data: {
+                labels: monthLabels,
+                datasets: [{
+                  label: "Inscriptions",
+                  data: monthCounts,
+                  borderColor: '#4e73df',
+                  backgroundColor: 'rgba(78,115,223,0.1)',
+                  pointRadius: 3,
+                  pointBackgroundColor: '#4e73df',
+                  pointBorderColor: '#4e73df',
+                  pointHoverRadius: 4,
+                  pointHoverBackgroundColor: '#4e73df',
+                  pointHitRadius: 10,
+                  pointBorderWidth: 2,
+                  fill: true,
+                  tension: 0.3
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  xAxes: [{ gridLines: { display: false } }],
+                  yAxes: [{
+                    ticks: { beginAtZero: true, precision: 0 },
+                    gridLines: { color: 'rgba(234, 236, 244, 0.5)' }
+                  }]
+                },
+                legend: { display: false }
+              }
+            });
+          }
+
+          // Pie chart for roles distribution
+          var pieEl = document.getElementById('myPieChart');
+          if(pieEl && window.Chart){
+            new Chart(pieEl, {
+              type: 'doughnut',
+              data: {
+                labels: rolesLabels,
+                datasets: [{
+                  data: rolesCounts,
+                  backgroundColor: ['#e11d48', '#64748b'],
+                  hoverBackgroundColor: ['#be123c', '#475569'],
+                  hoverBorderColor: 'rgba(234, 236, 244, 1)'
+                }]
+              },
+              options: {
+                maintainAspectRatio: false,
+                legend: { position: 'bottom' },
+                cutoutPercentage: 65,
+              }
+            });
+          }
+        } catch (e) { console && console.warn('Charts init error', e); }
+      });
+    </script>
 
 </body>
 

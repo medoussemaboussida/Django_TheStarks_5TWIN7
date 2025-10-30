@@ -15,14 +15,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+<<<<<<< HEAD
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
+=======
+from django.urls import include, path
+>>>>>>> 32e919597a09c2a6a6116d190cf312aa28ac158d
 from django.contrib.auth import views as auth_views
 from core import views
 from core.forms import PasswordResetRequestForm, StyledSetPasswordForm
-from django.urls import include, path
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,8 +40,14 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('admin-template/', views.admin_dashboard, name='admin_dashboard'),
+<<<<<<< HEAD
     path('journal/', include('journal.urls')),
+=======
+    path('admin-template/reclamations/', views.reclamations, name='reclamations'),
+    path('api/reclamations/submit/', views.submit_reclamation, name='submit_reclamation'),
+>>>>>>> 32e919597a09c2a6a6116d190cf312aa28ac158d
     path('summarizer/', include('summarizer.urls')),  # Ajout ici pour inclure les URLs de l'app summarizer
+    path('api/grok-chat/', views.grok_chat, name='grok_chat'),
     # Password reset
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='admin/password_reset_form.html',

@@ -20,10 +20,29 @@ except ImportError:  # package optional; app still runs without it
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env file from project root (if present and python-dotenv installed)
-# override=True ensures .env takes precedence over previously-set shell env vars
+# Load .env file from project root
+# If python-dotenv is installed, use it; otherwise do a minimal manual parse.
+env_path = BASE_DIR / '.env'
 if load_dotenv is not None:
-    load_dotenv(BASE_DIR / '.env', override=True)
+    load_dotenv(env_path, override=True)
+else:
+    if env_path.exists():
+        try:
+            with open(env_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):  # comments/empty
+                        continue
+                    if '=' not in line:
+                        continue
+                    k, v = line.split('=', 1)
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    # do not override already-set environment variables
+                    if k and os.getenv(k) is None:
+                        os.environ[k] = v
+        except Exception:
+            pass
 
 
 # Quick-start development settings - unsuitable for production
@@ -135,6 +154,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+<<<<<<< HEAD
 # Media files (user uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -143,6 +163,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/journal/'
 
+=======
+# Media (uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+>>>>>>> 32e919597a09c2a6a6116d190cf312aa28ac158d
 # reCAPTCHA configuration
 # For local development, set your keys directly here (DO NOT commit real prod keys)
 # In production, prefer: RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '')
@@ -181,3 +207,9 @@ elif os.getenv('SMTP_ENABLED', '0') == '1':
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@localhost')
+
+# Grok (xAI) API configuration
+# Set GROK_API_KEY in your environment or .env. Example:
+# GROK_API_KEY=...  GROK_API_BASE=https://api.x.ai/v1
+GROK_API_KEY = os.getenv('GROK_API_KEY', '')
+GROK_API_BASE = os.getenv('GROK_API_BASE', 'https://api.x.ai/v1')
